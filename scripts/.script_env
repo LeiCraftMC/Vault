@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2034
+set -o pipefail -o errexit
+ENV_BASEDIR=$(RL=$(readlink -n "$0"); SP="${RL:-$0}"; dirname "$(cd "$(dirname "${SP}")"; pwd)/$(basename "${SP}")")
+
+VAULT_FOLDER=${VAULT_FOLDER:=web-vault}
+CHECKOUT_TAGS=${CHECKOUT_TAGS:=true}
+OUTPUT_FOLDER=builds
+
+function get_web_vault_version {
+    # First check if we are able to get a tag or branch
+    VAULT_VERSION=$(git describe --abbrev=0 --tags --exact-match 2>/dev/null || git branch --show-current)
+    # Else we will use the current commit hash
+    if [[ -z "${VAULT_VERSION}" ]]; then
+      VAULT_VERSION=$(git rev-parse HEAD)
+    fi
+    # Remove everything up to the first occurrence of "-"
+    # The extracted tag could start with either `web-`, `desktop-`, `cli-` or `browser-`
+    echo "${VAULT_VERSION#*-}"
+}
+
+# Load build environment variables if it exists
+if [ -f "${ENV_BASEDIR}/../.build_env" ]; then
+  # shellcheck source=../.build_env
+  . "${ENV_BASEDIR}/../.build_env"
+fi
+
+unset ENV_BASEDIR
