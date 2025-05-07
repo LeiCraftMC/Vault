@@ -4,10 +4,10 @@ TAG_NAME=$(curl -s "https://api.github.com/repos/dani-garcia/bw_web_builds/relea
 DOWNLOAD_URL="https://github.com/dani-garcia/bw_web_builds/archive/refs/tags/$TAG_NAME.tar.gz"
 
 mkdir -p ./tmp/
-
-curl -L -o "./tmp/web-code-latest.tar.gz" "$DOWNLOAD_URL"
-
 cd ./tmp/
+rm -rf web-build
+
+curl -L -o "web-code-latest.tar.gz" "$DOWNLOAD_URL"
 
 tar -xzf web-code-latest.tar.gz
 rm web-code-latest.tar.gz
