@@ -10,7 +10,8 @@ inputs:
     required: true
   image-tag-suffix:
     description: "Docker Image Tag Prefix"
-    required: true
+    required: false
+    default: ""
   dockerfile:
     description: "Dockerfile Path"
     required: false
