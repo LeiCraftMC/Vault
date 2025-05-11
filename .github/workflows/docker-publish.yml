@@ -64,7 +64,7 @@ jobs:
 
       # Web Image
       - name: Prepare Web Image Build
-        run:
+        run: |
           sudo apt-get install -y rsync
           sudo chmod +x ./scripts/prepare-web-build.sh
           ./scripts/prepare-web-build.sh
