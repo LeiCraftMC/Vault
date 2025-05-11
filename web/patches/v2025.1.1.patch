@@ -786,3 +786,27 @@ index 91b4ee7dd6..691a47c1d3 100644
    ],
    "exclude": [
      "apps/web/src/**/*.spec.ts",
+diff --git a/apps/web/src/theme.ts b/apps/web/src/theme.ts
+index 870e30c80e..fc54a181d3 100644
+--- a/apps/web/src/theme.ts
++++ b/apps/web/src/theme.ts
+@@ -13,7 +13,7 @@ const setTheme = () => {
+     return parsedGlobalState ? parsedGlobalState.theme : null;
+   };
+ 
+-  const defaultTheme = "light";
++  const defaultTheme = "dark";
+   const htmlEl = document.documentElement;
+   let theme = defaultTheme;
+ 
+@@ -23,8 +23,8 @@ const setTheme = () => {
+ 
+   if (themeFromState) {
+     if (themeFromState.indexOf("system") > -1) {
+-      theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+-    } else if (themeFromState.indexOf("dark") > -1) {
++      theme = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
++    } else if (themeFromState.indexOf("light") > -1) {
+       theme = "dark";
+     }
+   }
