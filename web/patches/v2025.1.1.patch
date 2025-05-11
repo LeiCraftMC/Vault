@@ -115,7 +115,7 @@ index a39c045e0e..9d72e609b4 100644
     loading state here for process reloading. -->
    <div class="tw-p-8 tw-flex">
 -    <img class="new-logo-themed" alt="Bitwarden" />
-+    <img class="new-logo-themed" alt="Vaultwarden" />
++    <img class="new-logo-themed" alt="LeiCraft_MC Vault" />
      <div class="spinner-container tw-justify-center">
        <i
          class="bwi bwi-spinner bwi-spin bwi-3x tw-text-muted"
@@ -129,7 +129,7 @@ index ee9f87bc2c..90ded63589 100644
            case "showToast":
 +            if (typeof message.text === "string" && typeof crypto.subtle === "undefined") {
 +              message.title = "This browser requires HTTPS to use the web vault";
-+              message.text = "Check the Vaultwarden wiki for details on how to enable it";
++              message.text = "Check the LeiCraft_MC Vault wiki for details on how to enable it";
 +            }
              this.toastService._showToast(message);
              break;
@@ -153,12 +153,12 @@ index de187d2c33..c33f49fd70 100644
        element: document.getElementById("qr"),
        value:
 -        "otpauth://totp/Bitwarden:" +
-+        "otpauth://totp/Vaultwarden:" +
++        "otpauth://totp/LeiCraft_MC-Vault:" +
          Utils.encodeRFC3986URIComponent(email) +
          "?secret=" +
          encodeURIComponent(this.key) +
 -        "&issuer=Bitwarden",
-+        "&issuer=Vaultwarden",
++        "&issuer=LeiCraft_MC-Vault",
        size: 160,
      });
    }
@@ -318,7 +318,7 @@ index ff0aea47b9..21ec31a19a 100644
          this.currentUrl = event.url;
  
 -        let title = i18nService.t("bitWebVault");
-+        let title = "Vaultwarden Web";
++        let title = "LeiCraft_MC Vault";
  
          if (this.currentUrl.includes("/sm/")) {
            title = i18nService.t("bitSecretsManager");
@@ -353,13 +353,10 @@ index 72f0f1f1da..cea0867131 100644
  <div class="container my-5 text-muted text-center">
 -  <environment-selector></environment-selector>
 -  &copy; {{ year }} Bitwarden Inc. <br />
-+  Vaultwarden Web<br />
-   {{ "versionNumber" | i18n: version }}
-+  <br /><br />
 +  <div class="small">
-+    A modified version of the Bitwarden&reg; Web Vault for Vaultwarden (an unofficial rewrite of the
-+    Bitwarden&reg; server).<br />
-+    Vaultwarden is not associated with the Bitwarden&reg; project nor Bitwarden Inc.
++    A safe place for all your passwords and secrets!<br />
++    &copy; {{ year }} LeiCraft_MC<br />
++    Original based on Vaultwarden & Bitwarden<br />
 +  </div>
  </div>
 diff --git a/apps/web/src/app/layouts/header/web-header.component.html b/apps/web/src/app/layouts/header/web-header.component.html
@@ -373,7 +370,7 @@ index 7cba19b29a..024b14daad 100644
 -              <a bitMenuItem href="https://bitwarden.com/help/" target="_blank" rel="noreferrer">
 +              <a
 +                bitMenuItem
-+                href="https://github.com/dani-garcia/vaultwarden"
++                href="https://github.com/LeiCraftMC/Vault"
 +                target="_blank"
 +                rel="noreferrer"
 +              >
@@ -515,7 +512,7 @@ index 0b8ea86491..5d98411f46 100644
      <meta name="theme-color" content="#175DDC" />
  
 -    <title page-title>Bitwarden Web vault</title>
-+    <title page-title>Vaultwarden Web</title>
++    <title page-title>LeiCraft_MC Vault</title>
  
      <link rel="apple-touch-icon" sizes="180x180" href="images/icons/apple-touch-icon.png" />
      <link rel="icon" type="image/png" sizes="32x32" href="images/icons/favicon-32x32.png" />
@@ -530,7 +527,7 @@ index 0b8ea86491..5d98411f46 100644
        <!-- Note: any changes to this html need to be made in the app.component.html as well -->
        <div class="tw-p-8 tw-flex">
 -        <img class="new-logo-themed" alt="Bitwarden" />
-+        <img class="new-logo-themed" alt="Vaultwarden" />
++        <img class="new-logo-themed" alt="LeiCraft_MC Vault" />
          <div class="spinner-container tw-justify-center">
            <i
              class="bwi bwi-spinner bwi-spin bwi-3x tw-text-muted"
@@ -541,7 +538,7 @@ index 92a1204c60..d9ff4771a3 100644
 @@ -1,5 +1,5 @@
  {
 -  "name": "Bitwarden Vault",
-+  "name": "Vaultwarden Web",
++  "name": "LeiCraft_MC Vault",
    "icons": [
      {
        "src": "images/icons/android-chrome-192x192.png",
@@ -651,7 +648,7 @@ index 279294f4c0..1fca6d97e9 100644
 +      this.platformUtilsService.showToast(
 +        "error",
 +        "This browser requires HTTPS to use the web vault",
-+        "Check the Vaultwarden wiki for details on how to enable it",
++        "Check the LeiCraft_MC Vault wiki for details on how to enable it",
 +      );
 +      return;
 +    }
@@ -699,14 +696,12 @@ index cb3445abd9..6ad354505d 100644
      <ng-container *ngIf="!hideYearAndVersion">
 -      <div bitTypography="body2">&copy; {{ year }} Bitwarden Inc.</div>
 -      <div bitTypography="body2">{{ version }}</div>
-+      <div bitTypography="body2">Vaultwarden Web</div>
-+      <div bitTypography="body2">Version {{ version }}</div>
++      <div bitTypography="body2">&copy; {{ year }} LeiCraft_MC Vault</div>
 +      <br />
 +      <div class="small">
-+        A modified version of the Bitwarden&reg; Web Vault for Vaultwarden (an unofficial rewrite of
-+        the Bitwarden&reg; server).<br />
-+        Vaultwarden is not associated with the Bitwarden&reg; project nor Bitwarden Inc.
-+      </div>
++       A safe place for all your passwords and secrets!<br />
++       Original based on Vaultwarden & Bitwarden<br />
++     </div>
      </ng-container>
    </footer>
  </main>
