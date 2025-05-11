@@ -66,7 +66,9 @@ jobs:
       - name: Prepare Web Image Build
         run:
           apt-get install -y rsync
+          chmod +x ./scripts/prepare-web-build.sh
           ./scripts/prepare-web-build.sh
+        shell: bash
 
       - name: Build and push Web Image
         uses: ./.github/workflows/docker-build-and-push
