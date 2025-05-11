@@ -345,12 +345,12 @@ index 3df2a7d895..f73d811690 100644
    }
  
 diff --git a/apps/web/src/app/layouts/frontend-layout.component.html b/apps/web/src/app/layouts/frontend-layout.component.html
-index 72f0f1f1da..a1d134dfc6 100644
+index 72f0f1f1da..1fcc1c5e1e 100644
 --- a/apps/web/src/app/layouts/frontend-layout.component.html
 +++ b/apps/web/src/app/layouts/frontend-layout.component.html
-@@ -1,6 +1,7 @@
+@@ -1,6 +1,8 @@
  <router-outlet></router-outlet>
--<div class="container my-5 text-muted text-center">
+ <div class="container my-5 text-muted text-center">
 -  <environment-selector></environment-selector>
 -  &copy; {{ year }} Bitwarden Inc. <br />
 -  {{ "versionNumber" | i18n: version }}
