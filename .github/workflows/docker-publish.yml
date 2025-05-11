@@ -76,6 +76,7 @@ jobs:
           image-name: ${{ env.IMAGE_NAME }}
           image-tag-suffix: -web
           docker_context: ./tmp/web-build
+          dockerfile: ./tmp/web-build/Dockerfile
           labels: ${{ steps.docker-setup.outputs.labels }}
           version: ${{ inputs.version }}
           pre_release: ${{ inputs.pre_release }}
