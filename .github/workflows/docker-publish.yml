@@ -87,7 +87,6 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           image-name: ${{ env.IMAGE_NAME }}
-          dockerfile: ./docker/Dockerfile
           labels: ${{ steps.docker-setup.outputs.labels }}
           version: ${{ inputs.version }}
           pre_release: ${{ inputs.pre_release }}
