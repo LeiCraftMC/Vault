@@ -637,7 +637,7 @@ index 1ac7b15401..0c388f6787 100644
    .theme_light img.new-logo-themed {
      content: url("../images/logo.svg");
 diff --git a/apps/web/src/theme.ts b/apps/web/src/theme.ts
-index 870e30c80e..fc54a181d3 100644
+index 870e30c80e..797afe4173 100644
 --- a/apps/web/src/theme.ts
 +++ b/apps/web/src/theme.ts
 @@ -13,7 +13,7 @@ const setTheme = () => {
@@ -649,17 +649,6 @@ index 870e30c80e..fc54a181d3 100644
    const htmlEl = document.documentElement;
    let theme = defaultTheme;
  
-@@ -23,8 +23,8 @@ const setTheme = () => {
- 
-   if (themeFromState) {
-     if (themeFromState.indexOf("system") > -1) {
--      theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
--    } else if (themeFromState.indexOf("dark") > -1) {
-+      theme = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
-+    } else if (themeFromState.indexOf("light") > -1) {
-       theme = "dark";
-     }
-   }
 diff --git a/apps/web/tailwind.config.js b/apps/web/tailwind.config.js
 index 2c0108ca3e..85d3689ea3 100644
 --- a/apps/web/tailwind.config.js
@@ -751,6 +740,35 @@ index 279294f4c0..607a5e0519 100644
      let email = this.formGroup.value.email;
      email = email.trim().toLowerCase();
      let name = this.formGroup.value.name;
+diff --git a/libs/angular/src/platform/services/theming/angular-theming.service.ts b/libs/angular/src/platform/services/theming/angular-theming.service.ts
+index 2073abdcd1..1711471aa0 100644
+--- a/libs/angular/src/platform/services/theming/angular-theming.service.ts
++++ b/libs/angular/src/platform/services/theming/angular-theming.service.ts
+@@ -21,9 +21,9 @@ export class AngularThemingService implements AbstractThemingService {
+       of(AngularThemingService.getSystemThemeFromWindow(window)),
+       // Start listening to changes
+       fromEvent<MediaQueryListEvent>(
+-        window.matchMedia("(prefers-color-scheme: dark)"),
++        window.matchMedia("(prefers-color-scheme: light)"),
+         "change",
+-      ).pipe(map((event) => (event.matches ? ThemeTypes.Dark : ThemeTypes.Light))),
++      ).pipe(map((event) => (event.matches ? ThemeTypes.Light : ThemeTypes.Dark))),
+     );
+   }
+ 
+@@ -33,9 +33,9 @@ export class AngularThemingService implements AbstractThemingService {
+    * @returns The active system theme.
+    */
+   static getSystemThemeFromWindow(window: Window): Theme {
+-    return window.matchMedia("(prefers-color-scheme: dark)").matches
+-      ? ThemeTypes.Dark
+-      : ThemeTypes.Light;
++    return window.matchMedia("(prefers-color-scheme: light)").matches
++      ? ThemeTypes.Light
++      : ThemeTypes.Dark;
+   }
+ 
+   readonly theme$ = this.themeStateService.selectedTheme$.pipe(
 diff --git a/libs/auth/src/angular/anon-layout/anon-layout-wrapper.component.ts b/libs/auth/src/angular/anon-layout/anon-layout-wrapper.component.ts
 index 04dc3b6dfd..2791b0bc17 100644
 --- a/libs/auth/src/angular/anon-layout/anon-layout-wrapper.component.ts
