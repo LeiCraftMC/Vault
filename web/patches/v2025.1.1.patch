@@ -320,23 +320,6 @@ index 94e8637e8a..d67491ee0f 100644
      if (this.acceptingSponsorship) {
        this.formGroup.controls.productTier.setValue(ProductTierType.Families);
        this.changedProduct();
-diff --git a/apps/web/src/app/core/init.service.ts b/apps/web/src/app/core/init.service.ts
-index b3e6d691f7..d51699589c 100644
---- a/apps/web/src/app/core/init.service.ts
-+++ b/apps/web/src/app/core/init.service.ts
-@@ -39,6 +39,12 @@ export class InitService {
-   ) {}
- 
-   init() {
-+
-+    const themeFromState = window.localStorage.getItem("global_theming_selection");
-+    if (!themeFromState) {
-+        window.localStorage.setItem("global_theming_selection", "system");
-+    }
-+
-     return async () => {
-       await this.stateService.init();
- 
 diff --git a/apps/web/src/app/core/router.service.ts b/apps/web/src/app/core/router.service.ts
 index ff0aea47b9..0e591bd9c6 100644
 --- a/apps/web/src/app/core/router.service.ts
@@ -491,6 +474,19 @@ index 1df842d6b3..d61637c92e 100644
  
      // Find the region
      const currentHostname = new URL(this.win.location.href).hostname;
+diff --git a/apps/web/src/app/settings/preferences.component.ts b/apps/web/src/app/settings/preferences.component.ts
+index 09dc7a3287..04757cd5a0 100644
+--- a/apps/web/src/app/settings/preferences.component.ts
++++ b/apps/web/src/app/settings/preferences.component.ts
+@@ -47,7 +47,7 @@ export class PreferencesComponent implements OnInit, OnDestroy {
+     vaultTimeout: [null as VaultTimeout | null],
+     vaultTimeoutAction: [VaultTimeoutAction.Lock],
+     enableFavicons: true,
+-    theme: [ThemeType.Light],
++    theme: [ThemeType.Dark],
+     locale: [null as string | null],
+   });
+ 
 diff --git a/apps/web/src/app/tools/send/add-edit.component.html b/apps/web/src/app/tools/send/add-edit.component.html
 index 7eade18a7c..b8f865faa7 100644
 --- a/apps/web/src/app/tools/send/add-edit.component.html
