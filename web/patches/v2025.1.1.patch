@@ -774,7 +774,7 @@ index 04dc3b6dfd..2791b0bc17 100644
      this.maxWidth = null;
      this.titleAreaMaxWidth = null;
 diff --git a/libs/auth/src/angular/anon-layout/anon-layout.component.html b/libs/auth/src/angular/anon-layout/anon-layout.component.html
-index cb3445abd9..31b69d34cb 100644
+index cb3445abd9..f9f1df9d54 100644
 --- a/libs/auth/src/angular/anon-layout/anon-layout.component.html
 +++ b/libs/auth/src/angular/anon-layout/anon-layout.component.html
 @@ -8,7 +8,7 @@
@@ -792,10 +792,10 @@ index cb3445abd9..31b69d34cb 100644
      <ng-container *ngIf="!hideYearAndVersion">
 -      <div bitTypography="body2">&copy; {{ year }} Bitwarden Inc.</div>
 -      <div bitTypography="body2">{{ version }}</div>
-+      <div bitTypography="body2">&copy; {{ year }} LeiCraft_MC Vault</div>
 +      <br />
 +      <div class="small">
 +        A safe place for all your passwords and secrets!<br />
++        <div bitTypography="body2">&copy; {{ year }} LeiCraft_MC Vault</div>
 +        Original based on Vaultwarden & Bitwarden
 +      </div>
      </ng-container>
