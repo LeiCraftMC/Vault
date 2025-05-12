@@ -320,6 +320,19 @@ index 94e8637e8a..d67491ee0f 100644
      if (this.acceptingSponsorship) {
        this.formGroup.controls.productTier.setValue(ProductTierType.Families);
        this.changedProduct();
+diff --git a/apps/web/src/app/core/core.module.ts b/apps/web/src/app/core/core.module.ts
+index 8f21dfa2c8..7b2f698125 100644
+--- a/apps/web/src/app/core/core.module.ts
++++ b/apps/web/src/app/core/core.module.ts
+@@ -223,7 +223,7 @@ const safeProviders: SafeProvider[] = [
+     provide: ThemeStateService,
+     useFactory: (globalStateProvider: GlobalStateProvider, configService: ConfigService) =>
+       // Web chooses to have Light as the default theme
+-      new DefaultThemeStateService(globalStateProvider, configService, ThemeType.Light),
++      new DefaultThemeStateService(globalStateProvider, configService, ThemeType.Dark),
+     deps: [GlobalStateProvider, ConfigService],
+   }),
+   safeProvider({
 diff --git a/apps/web/src/app/core/router.service.ts b/apps/web/src/app/core/router.service.ts
 index ff0aea47b9..0e591bd9c6 100644
 --- a/apps/web/src/app/core/router.service.ts
