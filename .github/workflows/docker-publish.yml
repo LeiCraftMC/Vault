@@ -12,6 +12,11 @@ on:
         required: false
         default: "false"
         type: string
+      skip_web_build:
+        description: 'Skip web image build?'
+        required: false
+        default: "false"
+        type: string
   workflow_dispatch:
     inputs:
       version:
@@ -23,6 +28,11 @@ on:
         required: false
         default: false
         type: boolean
+      skip_web_build:
+        description: 'Skip web image build?'
+        required: false
+        default: "false"
+        type: string
 
 env:
   REGISTRY: ghcr.io
@@ -64,12 +74,14 @@ jobs:
 
       # Web Image
       - name: Prepare Web Image Build
+        if: inputs.skip_web_build != 'true'
         run: |
           chmod +x ./scripts/prepare-web-build.sh
           ./scripts/prepare-web-build.sh
         shell: bash
 
       - name: Build and push Web Image
+        if: inputs.skip_web_build != 'true'
         uses: ./.github/workflows/docker-build-and-push
         with:
           registry: ${{ env.REGISTRY }}
