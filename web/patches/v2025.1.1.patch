@@ -320,6 +320,23 @@ index 94e8637e8a..d67491ee0f 100644
      if (this.acceptingSponsorship) {
        this.formGroup.controls.productTier.setValue(ProductTierType.Families);
        this.changedProduct();
+diff --git a/apps/web/src/app/core/init.service.ts b/apps/web/src/app/core/init.service.ts
+index b3e6d691f7..d51699589c 100644
+--- a/apps/web/src/app/core/init.service.ts
++++ b/apps/web/src/app/core/init.service.ts
+@@ -39,6 +39,12 @@ export class InitService {
+   ) {}
+ 
+   init() {
++
++    const themeFromState = window.localStorage.getItem("global_theming_selection");
++    if (!themeFromState) {
++        window.localStorage.setItem("global_theming_selection", "system");
++    }
++
+     return async () => {
+       await this.stateService.init();
+ 
 diff --git a/apps/web/src/app/core/router.service.ts b/apps/web/src/app/core/router.service.ts
 index ff0aea47b9..0e591bd9c6 100644
 --- a/apps/web/src/app/core/router.service.ts
@@ -571,7 +588,7 @@ index 19d0a6a5ed..8ef17a6385 100644
      <meta charset="utf-8" />
      <title>Bitwarden WebAuthn Connector</title>
 diff --git a/apps/web/src/index.html b/apps/web/src/index.html
-index 0b8ea86491..6263c7f49f 100644
+index 0b8ea86491..1278e08796 100644
 --- a/apps/web/src/index.html
 +++ b/apps/web/src/index.html
 @@ -1,23 +1,25 @@
@@ -603,17 +620,6 @@ index 0b8ea86491..6263c7f49f 100644
          <div class="spinner-container tw-justify-center">
            <i
              class="bwi bwi-spinner bwi-spin bwi-3x tw-text-muted"
-@@ -28,4 +30,10 @@
-       </div>
-     </app-root>
-   </body>
-+  <script type="module">
-+      const themeFromState = window.localStorage.getItem("global_theming_selection");
-+      if (!themeFromState) {
-+        window.localStorage.setItem("global_theming_selection", "system");
-+      }
-+  </script>
- </html>
 diff --git a/apps/web/src/manifest.json b/apps/web/src/manifest.json
 index 92a1204c60..4cd66cf77d 100644
 --- a/apps/web/src/manifest.json
