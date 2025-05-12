@@ -1,0 +1,12 @@
+services:
+  leicraftmc-vault:
+    image: ghcr.io/leicraftmc/vault:latest
+    container_name: leicraftmc-vault
+    restart: unless-stopped
+    network_mode: bridge
+    environment:
+      DOMAIN: "https://vault.example.com"
+    volumes:
+      - /opt/vaultwarden/data/:/data/
+    ports:
+      - 80:80

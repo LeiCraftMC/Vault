@@ -1,0 +1,55 @@
+
+services:
+  db:
+    image: postgres:latest
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: "passbolt"
+      POSTGRES_USER: "passbolt"
+      POSTGRES_PASSWORD: "P4ssb0lt"
+    volumes:
+      - database_volume:/var/lib/postgresql/data
+
+  passbolt:
+    image: ghcr.io/leicraft/passbolt-with-backups:latest-postgres
+    restart: unless-stopped
+    tty: true
+    depends_on:
+      - db
+    environment:
+      APP_FULL_BASE_URL: https://passbolt.local
+      DATASOURCES_DEFAULT_DRIVER: Cake\Database\Driver\Postgres
+      DATASOURCES_DEFAULT_ENCODING: "utf8"
+      DATASOURCES_DEFAULT_URL: "postgres://passbolt:P4ssb0lt@db:5432/passbolt?schema=passbolt"
+      EMAIL_TRANSPORT_DEFAULT_HOST: "smtp.domain.tld"
+      EMAIL_TRANSPORT_DEFAULT_PORT: 587
+
+      VB_S3_ENDPOINT: ""
+      VB_S3_ACCESS_KEY_ID: ""
+      VB_S3_SECRET_ACCESS_KEY: ""
+      VB_S3_BUCKET: ""
+      VB_S3_BASE_PATH: ""
+
+      VB_AUTO_BACKUP: true
+
+      #PB_PASSBOLT_CONFIG_FILE: "/etc/passbolt/config/passbolt.php"
+
+      VB_ENCRYPTION_PASSPHRASE: ""
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - gpg_volume:/etc/passbolt/gpg
+      - jwt_volume:/etc/passbolt/jwt
+      #- ./cert.pem:/etc/ssl/certs/certificate.crt:ro
+      #- ./key.pem:/etc/ssl/certs/certificate.key:ro
+      #- ./cert.pem:/etc/passbolt/certs/certificate.crt:ro
+      #- ./key.pem:/etc/passbolt/certs/certificate.key:ro
+    command: >
+      bash -c "/usr/bin/wait-for.sh -t 0 db:5432 -- /docker-entrypoint.sh"
+    ports:
+      - 80:80
+      - 443:443
+
+volumes:
+  database_volume:
+  gpg_volume:
+  jwt_volume:

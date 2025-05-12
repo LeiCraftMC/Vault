@@ -1,0 +1,29 @@
+{
+  "name": "vault-backups",
+  "module": "src/index.ts",
+  "type": "module",
+  "private": true,
+  "version": "0.6.2",
+  "scripts": {
+    "clean": "rm -rf node_modules",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit --skipLibCheck --esModuleInterop --target esnext --moduleResolution bundler --module esnext --strict ./src/**/*.ts",
+    "debug": "bun run ./src/index.ts",
+    "compile": "bun run ./scripts/compile",
+    "start": "./build/bin/vault-backups"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "@cleverjs/cli": "^1.1.8",
+    "@date-fns/utc": "^2.1.0",
+    "date-fns": "^4.1.0",
+    "dotenv": "^16.4.7",
+    "flexbuf": "^1.2.2",
+    "low-level": "^1.0.15"
+  }
+}

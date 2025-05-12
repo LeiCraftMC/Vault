@@ -1,0 +1,13 @@
+FROM passbolt/passbolt:latest-ce
+
+COPY --chown=root:root ./build/bin/passbolt-backups-linux-x64-baseline /usr/local/bin/passbolt-backups
+
+RUN chmod u+x /usr/local/bin/passbolt-backups
+
+ENV PB_WEB_SERVER_USER=www-data
+ENV PB_CAKE_BIN=/usr/share/php/passbolt/bin/cake
+ENV PB_GPG_SERVER_PRIVATE_KEY=/etc/passbolt/gpg/serverkey_private.asc
+ENV PB_GPG_SERVER_PUBLIC_KEY=/etc/passbolt/gpg/serverkey.asc
+ENV PB_SAVE_ENV=true
+
+RUN /usr/local/bin/passbolt-backups cron setup "0 0 * * *"
