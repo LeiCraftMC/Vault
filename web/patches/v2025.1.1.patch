@@ -571,7 +571,7 @@ index 19d0a6a5ed..8ef17a6385 100644
      <meta charset="utf-8" />
      <title>Bitwarden WebAuthn Connector</title>
 diff --git a/apps/web/src/index.html b/apps/web/src/index.html
-index 0b8ea86491..1278e08796 100644
+index 0b8ea86491..6263c7f49f 100644
 --- a/apps/web/src/index.html
 +++ b/apps/web/src/index.html
 @@ -1,23 +1,25 @@
@@ -603,6 +603,17 @@ index 0b8ea86491..1278e08796 100644
          <div class="spinner-container tw-justify-center">
            <i
              class="bwi bwi-spinner bwi-spin bwi-3x tw-text-muted"
+@@ -28,4 +30,10 @@
+       </div>
+     </app-root>
+   </body>
++  <script type="module">
++      const themeFromState = window.localStorage.getItem("global_theming_selection");
++      if (!themeFromState) {
++        window.localStorage.setItem("global_theming_selection", "system");
++      }
++  </script>
+ </html>
 diff --git a/apps/web/src/manifest.json b/apps/web/src/manifest.json
 index 92a1204c60..4cd66cf77d 100644
 --- a/apps/web/src/manifest.json
