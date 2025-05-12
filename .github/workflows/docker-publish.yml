@@ -31,8 +31,8 @@ on:
       skip_web_build:
         description: 'Skip web image build?'
         required: false
-        default: "false"
-        type: string
+        default: false
+        type: boolean
 
 env:
   REGISTRY: ghcr.io
