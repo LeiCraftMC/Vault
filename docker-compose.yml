@@ -7,6 +7,6 @@ services:
     environment:
       DOMAIN: "https://vault.example.com"
     volumes:
-      - /opt/vaultwarden/data/:/data/
+      - /opt/leicraftmc/vault/data/:/data/
     ports:
       - 80:80
