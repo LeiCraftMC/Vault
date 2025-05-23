@@ -1,11 +1,34 @@
 services:
+  db:
+    image: mariadb:10.11
+    restart: unless-stopped
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: "true"
+      MYSQL_DATABASE: "passbolt"
+      MYSQL_USER: "passbolt"
+      MYSQL_PASSWORD: "P4ssb0lt"
+    volumes:
+      - database_volume:/var/lib/mysql
+
   leicraftmc-vault:
     image: ghcr.io/leicraftmc/vault:latest
     container_name: leicraftmc-vault
     restart: unless-stopped
+    depends_on:
+      - db
     network_mode: bridge
     environment:
       DOMAIN: "https://vault.example.com"
+
+      VB_S3_ENDPOINT: ""
+      VB_S3_ACCESS_KEY_ID: ""
+      VB_S3_SECRET_ACCESS_KEY: ""
+      VB_S3_BUCKET: ""
+      VB_S3_BASE_PATH: ""
+
+      VB_AUTO_BACKUP: true
+
+      VB_ENCRYPTION_PASSPHRASE: ""
     volumes:
       - /opt/leicraftmc/vault/data/:/data/
     ports:
