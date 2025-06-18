@@ -1,4 +1,4 @@
-# Passbolt-Backups - An automated way to backup your Passbolt data
+# LeiCraft_MC Vault - An automated way to backup your Passbolt data
 
 Passbolt-Backups is a tool that automates the backup process for your Passbolt password manager, ensuring your critical credential data is regularly saved and securely stored.
 
