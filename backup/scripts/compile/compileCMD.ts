@@ -1,5 +1,5 @@
-import { CLICMD, type CLICMDAlias, type CLICMDExecMeta } from "@cleverjs/cli";
-import { Compiler, type PlatformArg, Platforms } from "./compiler.js";
+import { CLIBaseCommand, CLICommandArg, CLICommandArgParser, type CLICommandContext } from "@cleverjs/cli";
+import { Compiler, type PlatformArg, Platforms } from "./compiler";
 
 class CompileUtils {
     static async getPackageJSONVersion() {
@@ -29,38 +29,66 @@ class CompileUtils {
     }
 }
 
-export class CompileAllCMD extends CLICMD {
-    readonly name = "all";
-    readonly description = "Compile for all platforms";
-    readonly usage = "all";
 
-    async run(args: string[]) {
+const CMD_ARG_SPEC = CLICommandArg.defineCLIArgSpecs({
+    args: [
+        {
+            name: "all",
+            variadic: true,
+            description: "Args",
+            type: "string"
+        }
+    ]
+});
+
+export class CompileAllCMD extends CLIBaseCommand<typeof CMD_ARG_SPEC> {
+
+    constructor() {
+        super({
+            name: "all",
+            description: "Compile for all platforms",
+            args: CMD_ARG_SPEC
+        });
+    }
+
+    override async run(args: CLICommandArgParser.ParsedArgs<typeof CMD_ARG_SPEC>, ctx: CLICommandContext): Promise<boolean> {
         const builds: Promise<void>[] = [];
 
-        const version_settings = await CompileUtils.getTargetVersion(args);
+        const version_settings = await CompileUtils.getTargetVersion(args.args.all);
 
         for (const platform in Platforms) {
             builds.push(new Compiler(platform as PlatformArg, ...version_settings).build());
         }
         await Promise.all(builds);
+
+        return true;
     }
 }
 
-export class CompileToTargetCMD extends CLICMD {
-    readonly name = "auto";
-    readonly description = "Compile for a specified platform";
+export class CompileToTargetCMD extends CLIBaseCommand<typeof CMD_ARG_SPEC> {
+    
     readonly usage = "[<platform> | auto | all] [<version>] [--no-version-tag]";
-    readonly aliases = Object.keys(Platforms);
 
-    async run(args: string[], meta: CLICMDExecMeta) {
-        const platform = (meta.parent_args.at(-1) || "auto") as PlatformArg;
+    constructor() {
+        super({
+            name: "auto",
+            description: "Compile for a specified platform",
+            aliases: Object.keys(Platforms),
+            args: CMD_ARG_SPEC
+        });
+    }
+
+    override async run(args: CLICommandArgParser.ParsedArgs<typeof CMD_ARG_SPEC>, ctx: CLICommandContext): Promise<boolean> {
+        const platform = (ctx.raw_parent_args.at(-1) || "auto") as PlatformArg;
 
         if (Object.keys(Platforms).some(p => p === platform) === false && platform !== "auto") {
             console.log(`Invalid platform: ${platform}`);
-            return;
+            return false;
         }
-        const version_settings = await CompileUtils.getTargetVersion(args);
+        const version_settings = await CompileUtils.getTargetVersion(args.args.all);
         await new Compiler(platform, ...version_settings).build();
+
+        return true;
     }
 
 }

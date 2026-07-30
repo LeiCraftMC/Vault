@@ -1,3 +1,0 @@
-FROM ghcr.io/leicraft/passbolt-with-backups:latest-base
-
-RUN apt-get install -y cron postgresql-client

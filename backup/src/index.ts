@@ -1,53 +1,42 @@
 import { Logger } from "./logger";
-import { CLIApp, CMDFlag, CMDFlagsParser, type CLICMDExecMeta } from "@cleverjs/cli";
+import { CLIApp, CLICommandArg, CLICommandArgParser, CLICommandContext, type CLICMDExecEnv } from "@cleverjs/cli";
 import { CreateBackupCMD } from "./commands/createCMD";
 import { DownloadBackupCMD } from "./commands/downloadCMD";
 import { CronCMD } from "./commands/cronCMDs";
 import { VersionCMD } from "./commands/versionCMD";
+import { ConfigHandler } from "./configHandler";
 
-class Main extends CLIApp {
-    
-    protected flagParser = new CMDFlagsParser({
-        "--log-level": new CMDFlag("string", "Log level", false, null),
-    });
-
-    protected onInit(): void | Promise<void> {
-        this.register(new CreateBackupCMD());
-        this.register(new DownloadBackupCMD());
-        this.register(new CronCMD());
-        this.register(new VersionCMD());
-    }
-
-    protected async run_help(meta: CLICMDExecMeta): Promise<void> {
-        Logger.log(`Vault Backups CLI v${process.env.APP_VERSION || "unknown"}`);
-        Logger.log("Usage: vault-backups <command> [...args]");
-        Logger.log("Options:");
-        Logger.log("  --config=<path_to_env>  Path to the env file, if there are not automatically set");
-        super.run_help(meta);
-    }
-
-    async run(args: string[], meta: CLICMDExecMeta): Promise<void> {
-        
-        const parsingResult = this.flagParser.parse(args, true);
-
-        if (typeof parsingResult === "string") {
-            Logger.error(parsingResult);
-            process.exit(1);
+new CLIApp({
+    globalFlags: CLICommandArg.defineCLIFlagSpecs([
+        {
+            name: "config",
+            type: "string",
+            description: "Path to the env configuration file.",
+            required: false,
+        },
+        {
+            name: "log-level",
+            type: "enum",
+            allowedValues: ["debug" , "info" , "warn" , "error" , "critical"],
+            description: "Set the log level for the application.",
+            default: "info"
         }
-        const flags = parsingResult.result;
-        args = parsingResult.discarded;
+    ]),
+    logger: Logger,
+    exitOnError: true
+})
+    .register(new CreateBackupCMD())
+    .register(new DownloadBackupCMD())
+    .register(new CronCMD())
+    .register(new VersionCMD())
 
-        if (flags["--log-level"]) {
-            Logger.setLogLevel(flags["--log-level"] as any);
-        }
+    .use(async (args, ctx, next) => {
 
-        return super.run(args, meta);
-    }
+        const config = await ConfigHandler.loadConfig(args["config"])!;
 
-}
+        Logger.setLogLevel(config.LCMC_VAULT_BACKUP_LOG_LEVEL || args["log-level"]);
 
+        return await next();
+    })
 
-new Main(
-    "shell",
-    Logger.log.bind(Logger),
-).handle(process.argv.slice(2));
+    .handle(process.argv.slice(2), "shell");

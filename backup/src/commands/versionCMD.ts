@@ -1,14 +1,19 @@
-import { CLICMD } from "@cleverjs/cli";
+import { CLIBaseCommand } from "@cleverjs/cli";
 import { Logger } from "../logger";
 
-export class VersionCMD extends CLICMD {
-    readonly name = "version";
-    readonly description = "Prints the version of the tool.";
-    readonly usage = "version";
-    readonly aliases = ["-v", "--version"];
+export class VersionCMD extends CLIBaseCommand {
+    
+    constructor() {
+        super({
+            name: "version",
+            description: "Prints the version of the tool.",
+            aliases: ["-v", "--version"]
+        });
+    }
 
-    async run(args: string[]) {
+    async run() {
         const version = process.env.APP_VERSION || "unknown";
         Logger.log(`${version}`);
+        return true;
     }
 }

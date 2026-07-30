@@ -1,4 +1,3 @@
-import { formatDate } from "date-fns/format";
 import { BE, Container, DataEncoder } from "flexbuf";
 import { Uint, Uint16, Uint64 } from "low-level";
 import { AES256 } from "./crypto";
@@ -50,7 +49,15 @@ export class BackupArchiveHeader extends Container {
 
 
     public getDateString() {
-        return `${formatDate(Number(this.time.toBigInt()), "yyyy-MM-dd_HH-mm-ss")}`;
+        // return `${formatDate(Number(this.time.toBigInt()), "yyyy-MM-dd_HH-mm-ss")}`;
+        // using temporal api instead of formatDate to avoid importing date-fns
+        return `${Temporal.Instant.fromEpochMilliseconds(Number(this.time.toBigInt()))
+            .toZonedDateTimeISO(Temporal.Now.timeZoneId())
+            .toString({ timeZoneName: 'never', calendarName: 'never' })
+            .replace('T', '_')
+            .replace(/:/g, '-')
+            .slice(0, 19)}`;
+        
     }
 
     public getArchiveName() {

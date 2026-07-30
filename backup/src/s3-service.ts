@@ -42,11 +42,11 @@ export class S3Service {
 
     static fromConfig(config: ParsedConfig) {
         return new S3Service({
-            endpoint: config.VB_S3_ENDPOINT,
-            accessKeyId: config.VB_S3_ACCESS_KEY_ID,
-            secretAccessKey: config.VB_S3_SECRET_ACCESS_KEY,
-            bucket: config.VB_S3_BUCKET,
-            basePath: config.VB_S3_BASE_PATH
+            endpoint: config.LCMC_VAULT_BACKUP_S3_ENDPOINT,
+            accessKeyId: config.LCMC_VAULT_BACKUP_S3_ACCESS_KEY_ID,
+            secretAccessKey: config.LCMC_VAULT_BACKUP_S3_SECRET_ACCESS_KEY,
+            bucket: config.LCMC_VAULT_BACKUP_S3_BUCKET,
+            basePath: config.LCMC_VAULT_BACKUP_S3_BASE_PATH
         });
     }
 

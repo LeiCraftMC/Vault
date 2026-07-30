@@ -1,62 +1,108 @@
-import { CLICMD, CLISubCMD } from "@cleverjs/cli";
 import { Utils } from "../utils";
 import { CronHelper } from "../apis/helper";
 import { Logger } from "../logger.js";
+import { CLIBaseCommand, CLICommandArg, CLICommandArgParser, CLICommandContext, CLISubCommandGroup } from "@cleverjs/cli";
 
-export class CronCMD extends CLISubCMD {
+export class CronCMD extends CLISubCommandGroup {
 
-    readonly name = "cron";
-    readonly description = "Cron job for automatic backup creation.";
-    readonly usage = "cron (setup | delete) [--config=<path_to_env>] [...args]";
-
-    protected onInit(): void | Promise<void> {
+    constructor() {
+        super({
+            name: "cron",
+            description: "Manage cron jobs for automatic backup creation."
+        });
         this.register(new CronSetupCMD());
         this.register(new CronDeleteCMD());
     }
 
 }
 
-class CronSetupCMD extends CLICMD {
-    readonly name = "setup";
-    readonly description = "Setup cron job for automatic backup creation.";
-    readonly usage = "setup <cron_time> [<bin_path>] [<custom_env>]";
+const CRON_SETUP_CMD_ARG_SPEC = CLICommandArg.defineCLIArgSpecs({
+    flags: [
+        {
+            name: "cron-time",
+            description: "The cron time string (e.g., '0 0 * * *' for daily at midnight).",
+            type: "string",
+            required: true,
+            checkFN: (value: string) => {
+                const cronRegex = /^(\*|([0-5]?\d)) (\*|([01]?\d|2[0-3])) (\*|([01]?\d|2[0-3])) (\*|([01]?\d|2[0-3])) (\*|([01]?\d|2[0-3]))$/;
+                if (!cronRegex.test(value)) {
+                    return "Invalid cron time format. Please provide a valid cron expression.";
+                }
+                return true;
+            },
+        },
+        {
+            name: "bin-path",
+            description: "The path to the backup binary.",
+            type: "string",
+            required: false,
+            default: "/usr/local/bin/lcmc-vault-backups",
+            checkFN: (value: string) => {
+                if (!Utils.isExecutable(value)) {
+                    return `The specified binary path '${value}' is not executable or does not exist.`;
+                }
+                return true;
+            }
+        },
+        {
+            name: "custom-env-file",
+            description: "Path to a custom environment file.",
+            type: "string",
+            required: false
+        }
+    ]
+})
 
-    async run(args: string[]) {
+class CronSetupCMD extends CLIBaseCommand {
+
+    constructor() {
+        super({
+            name: "setup",
+            description: "Setup cron job for automatic backup creation.",
+            args: CRON_SETUP_CMD_ARG_SPEC,
+        });
+    }
+
+    override async run(args: CLICommandArgParser.ParsedArgs<typeof CRON_SETUP_CMD_ARG_SPEC>, ctx: CLICommandContext): Promise<boolean> {
+
         Logger.log("Setting up cron job...");
 
-        if (args.length > 2) {
-            Logger.error("You have to specify the backup name and the destination directory.");
-            process.exit(1);
-        }
+        const cronTime = args.flags["cron-time"];
+        const binPath = args.flags["bin-path"];
+        const customENVFile = args.flags["custom-env-file"];
 
-        const cronTime = args[0] || "0 0 * * *";
-        const binPath = args[1] || "/usr/local/bin/vault-backups";
-        const customENV = args[2];
-
-        const create_result = await CronHelper.createCronJob(cronTime, binPath, customENV, true);
+        const create_result = await CronHelper.createCronJob(cronTime, binPath, customENVFile, true);
 
         if (create_result) {
             Logger.log("Cron job created successfully.");
+            return true;
         } else {
             Logger.error("Failed to create cron job.");
+            return false;
         }
     }
 
 }
 
-class CronDeleteCMD extends CLICMD {
-    readonly name = "delete";
-    readonly description = "Delete cron job for automatic backup creation.";
-    readonly usage = "delete [--config=<path_to_env>]";
+class CronDeleteCMD extends CLIBaseCommand {
 
-    async run(args: string[]) {
+    constructor() {
+        super({
+            name: "delete",
+            description: "Delete cron job for automatic backup creation."
+        });
+    }
+
+    override async run(): Promise<boolean> {
         Logger.log("Deleting cron job...");
 
         const result = await CronHelper.deleteCronJob();
         if (result) {
             Logger.log("Cron job deleted successfully.");
+            return true;
         } else {
             Logger.error("Failed to delete cron job.");
+            return false;
         }
     }
 

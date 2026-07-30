@@ -11,8 +11,9 @@ class CompilerCommand {
 
     public sourcemap = true;
     public minify = true;
-    public entrypoint = "./src/index.ts";
-    public outfile = "./build/bin/vault-backups";
+    public bytecode = true;
+    public entrypoint = "./scripts/index.ts";
+    public outfile = "./build/bin/lcmc-vault-backups";
     public platform: PlatformArg = "auto";
     public env: NodeJS.ProcessEnv = {};
     private additionalArgs: string[] = [];
@@ -28,6 +29,7 @@ class CompilerCommand {
             this.baseCommand,
             (this.sourcemap ? "--sourcemap" : ""),
             (this.minify ? "--minify" : ""),
+            (this.bytecode ? "--bytecode" : ""),
             this.entrypoint,
             "--outfile", this.outfile,
             (this.platform === "auto" ? "" : `--target=${Platforms[this.platform]}`),
@@ -76,4 +78,3 @@ export class Compiler {
     }
 
 }
-
