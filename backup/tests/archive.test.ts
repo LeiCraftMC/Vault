@@ -1,36 +1,30 @@
 import { Uint, Uint64 } from "low-level";
-import { SingleFile, BackupArchive } from "../src/archive.js";
+import { BackupArchive, BackupArchiveHeader } from "../src/archive.js";
 import { describe, expect, test } from "bun:test"
-import { UTCDate } from "@date-fns/utc";
 
 describe("encoding_decoding", () => {
 
-    test("single_file", () => {
+    test("header", () => {
 
-        const file = new SingleFile("path/to/file.txt", Uint.from("one line\nanother line", "utf8"));
+        const header = new BackupArchiveHeader(Uint64.from(1234567890123));
 
-        const hex = file.encodeToHex();
-        const decoded = SingleFile.fromDecodedHex(hex, true);
+        const hex = header.encodeToHex();
+        const decoded = BackupArchiveHeader.fromDecodedHex(hex, true);
         if (!decoded) {
             throw new Error("Decoding failed");
         }
 
         expect(decoded.length).toBe(hex.getLen());
-
-        expect(decoded.data.path).toBe("path/to/file.txt");
-        expect(decoded.data.content.toString()).toBe("one line\nanother line");
+        expect(decoded.data.time.toBigInt()).toBe(1234567890123n);
+        expect(Number(decoded.data.version)).toBe(1);
 
     });
 
     test("archive", () => {
 
-        const files = {
-            "path/to/file1.txt": "file 1 content",
-            "path/to/file2.txt": "file 2 content",
-            "path/to/file3.txt": "file 3 content",
-        };
+        const tarball = Uint.from("fake tar.gz bytes", "utf8");
 
-        const archive = BackupArchive.fromFileList(Uint64.from(new UTCDate().getTime()), files);
+        const archive = BackupArchive.fromTarball(Uint64.from(Date.now()), tarball);
 
         const hex = archive.encodeToHex();
         const decoded = BackupArchive.fromDecodedHex(hex, true);
@@ -44,4 +38,3 @@ describe("encoding_decoding", () => {
 
 
 });
-

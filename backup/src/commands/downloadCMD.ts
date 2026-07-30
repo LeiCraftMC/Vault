@@ -39,13 +39,13 @@ export class DownloadBackupCMD extends CLIBaseCommand {
     constructor() {
         super({
             name: "download",
-            description: "Downloads a backup from the S3 bucket and extracts it into to given directory.",
+            description: "Downloads a backup from the S3 bucket and extracts it into the given directory.",
             args: CMD_ARG_SPEC
         });
     }
 
     readonly name = "download";
-    readonly description = "Downloads a backup from the S3 bucket and extracts it into to given directory.";
+    readonly description = "Downloads a backup from the S3 bucket and extracts it into the given directory.";
 
     override async run(args: CLICommandArgParser.ParsedArgs<typeof CMD_ARG_SPEC>, ctx: CLICommandContext): Promise<boolean> {
 
@@ -59,7 +59,7 @@ export class DownloadBackupCMD extends CLIBaseCommand {
             Logger.error(`The destination directory '${fullDestination}' already exists.`);
             process.exit(1);
         }
-        
+
         const s3 = S3Service.fromConfig(config);
         Logger.log(`Downloading backup '${backupName}' from S3...`);
 
@@ -71,7 +71,7 @@ export class DownloadBackupCMD extends CLIBaseCommand {
             }
 
             Logger.log(`Downloaded backup '${backupName}' from S3.`);
-            
+
             if (rawBackup.encrypted && !config.LCMC_VAULT_BACKUP_ENCRYPTION_PASSPHRASE) {
                 Logger.error("The backup is encrypted. You need to provide the passphrase to decrypt it.");
                 process.exit(1);
@@ -86,20 +86,23 @@ export class DownloadBackupCMD extends CLIBaseCommand {
                     Logger.error("Could not decrypt the backup. Make sure you are using the correct passphrase.");
                 }
                 process.exit(1);
-            }        
+            }
 
             Logger.log("Extracting the backup...");
 
-            const files = await backup.getFileList();
-            for (const [path, data] of Object.entries(files)) {
+            const tarballPath = `${fullDestination}/backup.tar.gz`;
+            await Bun.write(tarballPath, backup.getTarball().getRaw(), { createPath: true });
 
-                const filePath = `${fullDestination}/${path}`;
-                await Bun.write(filePath, data.getRaw(), { createPath: true });
-
-                Logger.log(`Extracted ${path} to ${filePath}`);
+            const tarResult = Bun.$`tar -xzf ${tarballPath} -C ${fullDestination}`.quiet();
+            const result = await tarResult;
+            if (result.exitCode !== 0) {
+                Logger.error(`Failed to extract backup: ${result.stderr.toString()}`);
+                process.exit(1);
             }
 
             Logger.log(`Backup '${backupName}' downloaded and extracted successfully to '${fullDestination}'.`);
+            Logger.warn("Before starting Vaultwarden with restored data, stop it and delete any existing db.sqlite3-wal file next to db.sqlite3 to avoid corruption.");
+
             return true;
 
         } catch (e: any) {

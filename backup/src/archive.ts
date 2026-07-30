@@ -4,60 +4,21 @@ import { AES256 } from "./crypto";
 
 export type FilePath = string;
 
-export type FileList<T extends Uint | string = Uint | string> = {
-    [key: FilePath]: T;
-}
-
-export class SingleFile extends Container {
-
-    constructor(
-        readonly path: FilePath,
-        readonly content: Uint
-    ) {super()}
-
-    protected static fromDict(obj: Dict<any>) {
-        return new SingleFile(obj.path, obj.content);
-    }
-
-    protected static readonly encodingSettings: readonly DataEncoder[] = [
-        BE.Str("path"),
-        BE.Custom("content", {type: "prefix", val: "unlimited"})
-    ]
-
-}
-
-export class BackupArchiveContent extends Container {
-    constructor(
-        readonly files: SingleFile[],
-    ) {super()}
-
-    protected static fromDict(obj: Dict<any>) {
-        return new BackupArchiveContent(obj.files);
-    }
-
-    protected static readonly encodingSettings: readonly DataEncoder[] = [
-        BE.Array("files", "unlimited", SingleFile)
-    ]
-}
-
 export class BackupArchiveHeader extends Container {
 
     constructor(
         readonly time: Uint64,
-        readonly version: Uint16 = Uint16.from(0)
+        readonly version: Uint16 = Uint16.from(1)
     ) {super()}
 
 
     public getDateString() {
-        // return `${formatDate(Number(this.time.toBigInt()), "yyyy-MM-dd_HH-mm-ss")}`;
-        // using temporal api instead of formatDate to avoid importing date-fns
         return `${Temporal.Instant.fromEpochMilliseconds(Number(this.time.toBigInt()))
             .toZonedDateTimeISO(Temporal.Now.timeZoneId())
             .toString({ timeZoneName: 'never', calendarName: 'never' })
             .replace('T', '_')
             .replace(/:/g, '-')
             .slice(0, 19)}`;
-        
     }
 
     public getArchiveName() {
@@ -80,19 +41,13 @@ export class BackupArchive extends BackupArchiveHeader {
 
     constructor(
         time: Uint64,
-        readonly content: BackupArchiveContent,
-        version: Uint16 = Uint16.from(0)
+        readonly content: Uint,
+        version: Uint16 = Uint16.from(1)
     ) {super(time, version)}
 
 
-    async getFileList(encoding?: "hex"): Promise<FileList<Uint>>;
-    async getFileList(encoding: "utf8"): Promise<FileList<string>>;
-    async getFileList(encoding: "hex" | "utf8" = "hex") {
-        const fileList: FileList = {};
-        for (const file of this.content.files) {
-            fileList[file.path] = encoding === "utf8" ? file.content.toString("utf8") : file.content;
-        }
-        return fileList;
+    public getTarball() {
+        return this.content;
     }
 
 
@@ -104,46 +59,37 @@ export class BackupArchive extends BackupArchiveHeader {
     }
 
     public toRaw() {
-        return new RawBackupArchive(this.toHeader(), false, this.content.encodeToHex());
+        return new RawBackupArchive(this.toHeader(), false, this.content);
     }
 
 
     /**
-     * Encrypts an backup archive
+     * Encrypts a backup archive
      * @param passphrase The passphrase to encrypt the backup archive
      */
     public encrypt(passphrase: string) {
-        const encodedContent = this.content.encodeToHex();
-        const encryptedContent = AES256.encrypt(encodedContent, passphrase);
+        const encryptedContent = AES256.encrypt(this.content, passphrase);
         return new RawBackupArchive(this.toHeader(), true, encryptedContent);
     }
 
 
-    static fromFileList(time: Uint64, files: FileList) {
-        return new BackupArchive(
-            time,
-            new BackupArchiveContent(
-                Object.entries(files).map(([path, data]) => new SingleFile(
-                    path,
-                    data instanceof Uint ? data : Uint.from(data, "utf8")
-                ))
-            )
-        );
+    static fromTarball(time: Uint64, tarball: Uint) {
+        return new BackupArchive(time, tarball);
     }
-    
+
     /**
-     * Encrypts an backup archive
+     * Decrypts a backup archive
      * @param data The encrypted data
      * @param passphrase The passphrase to decrypt the data. If data is not encrypted, this parameter is ignored.
      */
     static fromEncrypted(data: Uint, passphrase?: string) {
         const raw = RawBackupArchive.fromDecodedHex(data);
         if (!raw) return null;
-        return BackupArchive.fromRaw(raw, passphrase);        
+        return BackupArchive.fromRaw(raw, passphrase);
     }
 
     /**
-     * Decrypts an raw backup archive
+     * Decrypts a raw backup archive
      * @param raw The raw backup archive
      * @param passphrase The passphrase to decrypt the data. If data is not encrypted, this parameter is ignored.
      */
@@ -152,19 +98,17 @@ export class BackupArchive extends BackupArchiveHeader {
 
         if (raw.encrypted) {
             if (!passphrase) return null;
-            
+
             decryptedRawContent = AES256.decrypt(raw.content, passphrase) as Uint;
             if (!decryptedRawContent) return null;
         } else {
             decryptedRawContent = raw.content;
         }
 
-        const content = BackupArchiveContent.fromDecodedHex(decryptedRawContent);
-        if (!content) return null;
-        return BackupArchive.fromHeaderAndContent(raw.header, content);
+        return BackupArchive.fromHeaderAndContent(raw.header, decryptedRawContent);
     }
 
-    static fromHeaderAndContent(header: BackupArchiveHeader, content: BackupArchiveContent) {
+    static fromHeaderAndContent(header: BackupArchiveHeader, content: Uint) {
         return new BackupArchive(header.time, content, header.version);
     }
 
@@ -175,7 +119,7 @@ export class BackupArchive extends BackupArchiveHeader {
 
     protected static readonly encodingSettings: readonly DataEncoder[] = [
         ...BackupArchiveHeader.encodingSettings,
-        BE.Object("content", BackupArchiveContent)
+        BE.Custom("content", {type: "prefix", val: "unlimited"})
     ]
 
 }

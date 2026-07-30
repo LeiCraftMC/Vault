@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { AES256 } from "../src/crypto.js";
 import { Uint, Uint64 } from "low-level";
-import { UTCDate } from "@date-fns/utc";
 import { BackupArchive } from "../src/archive.js";
 
 describe("crypto", () => {
@@ -23,13 +22,9 @@ describe("crypto", () => {
 
         const passphrase = "password";
 
-        const files = {
-            "path/to/file1.txt": "file 1 content",
-            "path/to/file2.txt": "file 2 content",
-            "path/to/file3.txt": "file 3 content",
-        };
+        const tarball = Uint.from("fake tar.gz bytes", "utf8");
 
-        const archive = BackupArchive.fromFileList(Uint64.from(new UTCDate().getTime()), files);
+        const archive = BackupArchive.fromTarball(Uint64.from(Date.now()), tarball);
 
         const encryptedArchive = archive.encrypt(passphrase).encodeToHex();
 

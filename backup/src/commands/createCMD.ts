@@ -1,9 +1,9 @@
 import { CLIBaseCommand, CLICommandArg, CLICommandArgParser, CLICommandContext } from "@cleverjs/cli";
 import { S3Service } from "../s3-service.js";
 import { Utils } from "../utils.js";
-import { BackupArchive, type RawBackupArchive, type FileList } from "../archive.js";
+import { BackupArchive, type RawBackupArchive } from "../archive.js";
 import { LinuxShellAPI } from "../apis/linux-shell.js";
-import { Uint64 } from "low-level";
+import { Uint, Uint64 } from "low-level";
 import { BackupHelper } from "../apis/helper.js";
 import { Logger } from "../logger.js";
 import { ConfigHandler } from "../configHandler.js";
@@ -23,11 +23,11 @@ export class CreateBackupCMD extends CLIBaseCommand {
     constructor() {
         super({
             name: "create",
-            description: "Creates a backup of the Vault data and uploads it to the S3 bucket.",
+            description: "Creates a backup of the Vaultwarden data and uploads it to the S3 bucket.",
             args: CMD_ARG_SPEC
         });
     }
-    
+
     override async run(args: CLICommandArgParser.ParsedArgs<typeof CMD_ARG_SPEC>, ctx: CLICommandContext): Promise<boolean> {
 
         const config = ConfigHandler.getConfig()!;
@@ -38,37 +38,47 @@ export class CreateBackupCMD extends CLIBaseCommand {
         }
 
         const timeStamp = Date.now();
+        const dataDir = config.LCMC_VAULT_BACKUP_DATA_DIR!;
 
-        Logger.log(`Creating new backup of the Vault at ${new Date(timeStamp).toLocaleString()}`);
-        const files: FileList = {};
+        Logger.log(`Creating new backup of the Vaultwarden data at ${new Date(timeStamp).toLocaleString()}`);
 
-        // files["data/passbolt.sql"] = await BackupHelper.getNewDBDump(config.PB_CAKE_BIN, config.PB_WEB_SERVER_USER);
-        // Logger.log("Database dump created.");
+        if (!Utils.existsSync(dataDir)) {
+            Logger.error(`Vaultwarden data directory '${dataDir}' does not exist.`);
+            process.exit(1);
+        }
 
-        // files["gpg/serverkey_private.asc"] = await LinuxShellAPI.getFile(config.PB_GPG_SERVER_PRIVATE_KEY);
-        // files["gpg/serverkey.asc"] = await LinuxShellAPI.getFile(config.PB_GPG_SERVER_PUBLIC_KEY);
-        // Logger.log("GPG keys copied.");
+        const dbPath = `${dataDir}/db.sqlite3`;
 
-        // if (config.PB_PASSBOLT_CONFIG_FILE) {
-        //     files["config/passbolt.php"] = await LinuxShellAPI.getFile(config.PB_PASSBOLT_CONFIG_FILE);
-        //     Logger.log("Passbolt config copied.");
-        // }
+        // Always create a safe database snapshot unless the user explicitly disabled it.
+        let snapshotPath: string | null = null;
+        if (Utils.existsSync(dbPath)) {
+            Logger.log("Creating safe database snapshot...");
+            snapshotPath = await BackupHelper.createDatabaseSnapshot(dbPath, config.LCMC_VAULT_BACKUP_DATABASE_METHOD);
+            if (snapshotPath) {
+                Logger.log("Database snapshot created.");
+            }
+        } else {
+            Logger.warn(`No db.sqlite3 found at ${dbPath}; database will not be included in backup.`);
+        }
 
+        let envContent: string | undefined;
         if (config.LCMC_VAULT_BACKUP_SAVE_ENV) {
-            files["env/lcmc-vault.env"] = await LinuxShellAPI.getEnv();
+            envContent = await LinuxShellAPI.getEnv();
             Logger.log("Environment variables copied.");
         }
 
-        Logger.log("Creating backup archive...");
-        const archive = BackupArchive.fromFileList(Uint64.from(timeStamp), files);
+        Logger.log("Creating tar.gz backup archive...");
+        const tarballBytes = await BackupHelper.createTarball(dataDir, snapshotPath, envContent);
+
+        const archive = BackupArchive.fromTarball(Uint64.from(timeStamp), Uint.from(tarballBytes));
 
         let rawArchive: RawBackupArchive;
         if (config.LCMC_VAULT_BACKUP_ENCRYPTION_PASSPHRASE) {
             rawArchive = archive.encrypt(config.LCMC_VAULT_BACKUP_ENCRYPTION_PASSPHRASE);
-            Logger.log("Encrypted successfully created.");
+            Logger.log("Encrypted archive created.");
         } else {
             rawArchive = archive.toRaw();
-            Logger.log("Unencrypted successfully created.");
+            Logger.log("Unencrypted archive created.");
         }
 
         Logger.log("Uploading backup to S3...");

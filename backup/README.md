@@ -1,36 +1,29 @@
-# LeiCraft_MC Vault - An automated way to backup your Passbolt data
+# LeiCraft_MC Vault Backup Tool
 
-Passbolt-Backups is a tool that automates the backup process for your Passbolt password manager, ensuring your critical credential data is regularly saved and securely stored.
+An automated way to backup your [Vaultwarden](https://github.com/dani-garcia/vaultwarden) instance and store the backups safely in S3-compatible storage.
 
 ## Features
 
-- Automated scheduled backups of Passbolt data
-- Database and GPG keys backup
+- Automated scheduled backups of a Vaultwarden data directory
+- Safe SQLite snapshot before archiving
 - S3 storage support for offsite backups
-- Configurable backup retention
 - Easy setup with Docker Compose
-- Optional encryption for backup files
+- Optional AES-256-GCM encryption for backup files
 
 ## Requirements
 
 - Docker and Docker Compose
-- A running Passbolt instance
+- A running Vaultwarden instance
 - S3-compatible storage
 
 ## Quick Start
 
-1. Clone this repository:
-    ```bash
-    git clone https://github.com/yourusername/Passbolt-Backups.git
-    cd Passbolt-Backups/docker
-    ```
-
+1. Clone this repository.
 2. Configure the environment variables in a `.env` file:
     ```bash
-    cp ../sample.env .env
+    cp config/sample.env .env
     # Edit .env with your configuration
     ```
-
 3. Run with Docker Compose:
     ```bash
     docker-compose up -d
@@ -42,88 +35,54 @@ Edit your `.env` file to configure the following options:
 
 ```
 # S3 configurations
-VB_S3_ENDPOINT=                                                        # S3 Endpoint. Example: "https://s3.amazonaws.com"
-VB_S3_ACCESS_KEY_ID=                                                   # S3 Access Key ID
-VB_S3_SECRET_ACCESS_KEY=                                               # S3 Secret Access Key
-VB_S3_BUCKET=                                                          # (Optional) S3 Bucket Name
-VB_S3_BASE_PATH=                                                       # (Optional) S3 Base Path. Example: "path/to/backups
+LCMC_VAULT_BACKUP_S3_ENDPOINT=                                           # S3 Endpoint. Example: "https://s3.amazonaws.com"
+LCMC_VAULT_BACKUP_S3_ACCESS_KEY_ID=                                      # S3 Access Key ID
+LCMC_VAULT_BACKUP_S3_SECRET_ACCESS_KEY=                                # S3 Secret Access Key
+LCMC_VAULT_BACKUP_S3_BUCKET=                                             # (Optional) S3 Bucket Name
+LCMC_VAULT_BACKUP_S3_BASE_PATH=                                          # (Optional) S3 Base Path. Example: "path/to/backups"
 
 # Backup configurations
-PB_WEB_SERVER_USER=www-data                                            # User of the Web Server. Example: "www-data"
-PB_CAKE_BIN=/usr/share/php/passbolt/bin/cake                           # Path to the Cake Bin. Example: "/usr/share/php/passbolt/bin/cake"
-PB_GPG_SERVER_PRIVATE_KEY=/etc/passbolt/gpg/serverkey_private.asc      # Path to the Passbolt Server Private Key
-PB_GPG_SERVER_PUBLIC_KEY=/etc/passbolt/gpg/serverkey.asc               # Path to the Passbolt Server Public Key
-PB_PASSBOLT_CONFIG_FILE=                                               # (Optional) Path to the Passbolt Config File
+LCMC_VAULT_BACKUP_DATA_DIR=/data                                         # (Optional) Path to the Vaultwarden data directory. Defaults to "/data".
+LCMC_VAULT_BACKUP_DATABASE_METHOD=auto                                   # (Optional) How to snapshot db.sqlite3: "auto", "vaultwarden", "sqlite3" or "none". Defaults to "auto".
+LCMC_VAULT_BACKUP_SAVE_ENV=false                                         # (Optional) Save container environment variables into the backup as backup.env. Either "true" or "false".
 
-PB_SAVE_ENV=true                                                      # Grab the env config from container rather than file. Either "true" or "false"
+LCMC_VAULT_BACKUP_AUTO_BACKUP=true                                       # (Optional) Enable daily backups at 00:00 UTC. Either "true" or "false".
 
 # Encryption configurations
-VB_ENCRYPTION_PASSPHRASE=                                              # (Optional) Passphrase for backup encryption. Leave empty to disable
-```
-
-## Docker Compose Example
-
-```yaml
-version: '3.8'
-
-services:
-  db:
-    image: mariadb:10.11
-    restart: unless-stopped
-    environment:
-      MYSQL_RANDOM_ROOT_PASSWORD: "true"
-      MYSQL_DATABASE: "passbolt"
-      MYSQL_USER: "passbolt"
-      MYSQL_PASSWORD: "P4ssb0lt"
-    volumes:
-      - database_volume:/var/lib/mysql
-
-  passbolt:
-    image: ghcr.io/leicraft/passbolt-with-backups:latest-mysql
-    restart: unless-stopped
-    depends_on:
-      - db
-    environment:
-      APP_FULL_BASE_URL: https://passbolt.local
-      DATASOURCES_DEFAULT_HOST: "db"
-      DATASOURCES_DEFAULT_USERNAME: "passbolt"
-      DATASOURCES_DEFAULT_PASSWORD: "P4ssb0lt"
-      DATASOURCES_DEFAULT_DATABASE: "passbolt"
-    volumes:
-      - gpg_volume:/etc/passbolt/gpg
-      - jwt_volume:/etc/passbolt/jwt
-    command:
-      [
-        "/usr/bin/wait-for.sh",
-        "-t",
-        "0",
-        "db:3306",
-        "--",
-        "/docker-entrypoint.sh",
-      ]
-    ports:
-      - 80:80
-      - 443:443
-
-volumes:
-  database_volume:
-  gpg_volume:
-  jwt_volume:
+LCMC_VAULT_BACKUP_ENCRYPTION_PASSPHRASE=                               # (Optional) The passphrase for encrypting the backup. Leave empty to disable encryption.
 ```
 
 ## Backup Process
 
-The backup includes:
-- Database dump
-- GPG keys (server keys)
-- Env configuration (optional)
-- Passbolt configuration (optional)
+The backup tool creates a safe snapshot of the running Vaultwarden SQLite database, then packs the following data into a real gzip-compressed tar archive (`tar.gz`) inside the encrypted envelope:
 
-Backups can be stored locally or in an S3-compatible storage with optional encryption.
+- `data/db.sqlite3` – a consistent snapshot of the SQLite database
+- `data/attachments/` – file attachments
+- `data/rsa_key.*` – JWT signing keys
+- `data/config.json` – admin configuration
+- `data/sends/` and `data/icon_cache/` (if present)
+- `backup.env` – container environment variables (if enabled)
+
+The live `db.sqlite3`, `db.sqlite3-wal` and `db.sqlite3-shm` files are never copied directly.
+
+### Database snapshot methods
+
+- `auto` (default): tries the built-in `/vaultwarden backup` command, then falls back to `sqlite3`.
+- `vaultwarden`: uses `/vaultwarden backup` only.
+- `sqlite3`: uses the `sqlite3` CLI (`.backup` command) only.
+- `none`: skips the database snapshot. Useful if you want to back up only the files.
 
 ## Restore Process
 
-
+1. Stop the Vaultwarden container completely.
+2. Download and extract the backup:
+    ```bash
+    lcmc-vault-backups download --backup-name=BACKUP_NAME --dest-dir=/tmp/restore
+    ```
+3. The extracted directory contains a `data/` folder and, optionally, `backup.env`.
+4. Replace the contents of your Vaultwarden data directory with the extracted `data/` folder.
+5. **Important:** delete any existing `db.sqlite3-wal` file next to `db.sqlite3` before starting Vaultwarden, otherwise the database may become corrupted.
+6. Start Vaultwarden again.
 
 ## License
 

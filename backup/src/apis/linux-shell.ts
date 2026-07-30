@@ -1,9 +1,7 @@
-import { type ShellPromise } from "bun";
-import { existsSync } from "fs";
 
 export class LinuxShellAPI {
 
-    static async handleExec(sp: ShellPromise) {
+    static async handleExec(sp: any) {
         try {
             const result = await sp.quiet();
             return result.text();
@@ -13,6 +11,22 @@ export class LinuxShellAPI {
             }
             throw new Error(`Failed to execute command`);
         }
+    }
+
+    static async exec(args: string[]) {
+        const proc = Bun.spawn(args, { stdout: "pipe", stderr: "pipe" });
+        const exitCode = await proc.exited;
+        if (exitCode !== 0) {
+            const stderr = await new Response(proc.stderr).text();
+            throw new Error(`Command failed: ${args.join(" ")}\n${stderr}`);
+        }
+        return await new Response(proc.stdout).text();
+    }
+
+    static commandExists(cmd: string) {
+        return this.exec(["which", cmd])
+            .then(() => true)
+            .catch(() => false);
     }
 
     static getFile(path: string) {

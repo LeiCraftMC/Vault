@@ -67,6 +67,12 @@ class ConfigSchema<T extends ConfigSchemaSettings = {}> {
                     Logger.error(`The environment variable ${key} is required but not set.`);
                     process.exit(1);
                 }
+                if (key === "LCMC_VAULT_BACKUP_DATA_DIR") {
+                    (result[key] as any) = "/data";
+                }
+                if (key === "LCMC_VAULT_BACKUP_DATABASE_METHOD") {
+                    (result[key] as any) = "auto";
+                }
                 continue;
             }
 
@@ -114,6 +120,10 @@ export class ConfigHandler {
         .add("LCMC_VAULT_BACKUP_S3_SECRET_ACCESS_KEY", true)
         .add("LCMC_VAULT_BACKUP_S3_BUCKET", false)
         .add("LCMC_VAULT_BACKUP_S3_BASE_PATH", false)
+
+        .add("LCMC_VAULT_BACKUP_DATA_DIR", false)
+
+        .add("LCMC_VAULT_BACKUP_DATABASE_METHOD", false, ["auto", "vaultwarden", "sqlite3", "none"])
 
         .add("LCMC_VAULT_BACKUP_SAVE_ENV", false, [true, false])
 
