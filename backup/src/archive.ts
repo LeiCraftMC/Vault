@@ -61,7 +61,7 @@ export class BackupArchiveHeader extends Container {
     }
 
     public getArchiveName() {
-        return `vault-${this.getDateString()}.backup`;
+        return `lcmc-vault-${this.getDateString()}.backup.tar.gz`;
     }
 
 
