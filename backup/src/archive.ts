@@ -50,13 +50,20 @@ export class BackupArchiveHeader extends Container {
 
 
     public getDateString() {
-        return `${Temporal.Instant.fromEpochMilliseconds(Number(this.time.toBigInt()))
-            .toZonedDateTimeISO(Temporal.Now.timeZoneId())
-            .toString({ timeZoneName: 'never', calendarName: 'never' })
-            .replace('T', '_')
-            .replace(/:/g, '-')
-            .slice(0, 19)}`;
+        const date = new Date(Number(this.time.toBigInt()));
+        
+        const pad = (num: number) => String(num).padStart(2, '0');
+
+        const year = date.getFullYear();
+        const month = pad(date.getMonth() + 1);
+        const day = pad(date.getDate());
+        const hours = pad(date.getHours());
+        const minutes = pad(date.getMinutes());
+        const seconds = pad(date.getSeconds());
+
+        return `${year}-${month}-${day}_${hours}-${minutes}-${seconds}`;
     }
+
 
     public getArchiveName() {
         return `lcmc-vault-${this.getDateString()}.backup.tar.gz`;

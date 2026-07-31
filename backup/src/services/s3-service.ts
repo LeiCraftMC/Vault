@@ -76,4 +76,20 @@ export class S3Service {
         const stream = s3File.stream();
         await Bun.write(outputPath, new Response(stream));
     }
+
+    /**
+     * Lists objects in the bucket under the configured base path.
+     */
+    async listObjects(prefix?: string) {
+        return await this.client.list({
+            prefix: prefix ?? this.basePath
+        });
+    }
+
+    /**
+     * Deletes an object from S3 by its full key (including base path if applicable).
+     */
+    async deleteObject(key: string) {
+        await this.client.unlink(key);
+    }
 }

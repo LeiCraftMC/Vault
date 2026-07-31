@@ -48,6 +48,9 @@ LCMC_VAULT_BACKUP_SAVE_ENV=false                                         # (Opti
 
 LCMC_VAULT_BACKUP_AUTO_BACKUP=true                                       # (Optional) Enable daily backups at 00:00 UTC. Either "true" or "false".
 
+LCMC_VAULT_BACKUP_RETENTION_DAYS=30                                      # (Optional) Delete backups older than this many days. Leave unset to keep all backups.
+LCMC_VAULT_BACKUP_RETENTION_MIN_COUNT=3                                  # (Optional) Always keep at least this many newest backups. Defaults to 1.
+
 # Encryption configurations
 LCMC_VAULT_BACKUP_ENCRYPTION_PASSPHRASE=                               # (Optional) The passphrase for encrypting the backup. Leave empty to disable encryption.
 ```
@@ -71,6 +74,19 @@ The live `db.sqlite3`, `db.sqlite3-wal` and `db.sqlite3-shm` files are never cop
 - `vaultwarden`: uses `/vaultwarden backup` only.
 - `sqlite3`: uses the `sqlite3` CLI (`.backup` command) only.
 - `none`: skips the database snapshot. Useful if you want to back up only the files.
+
+## Backup Retention
+
+Backups are never deleted automatically unless retention is configured. To limit storage growth, set:
+
+- `LCMC_VAULT_BACKUP_RETENTION_DAYS` – backups older than this many days are candidates for deletion.
+- `LCMC_VAULT_BACKUP_RETENTION_MIN_COUNT` – newest backups to always keep, regardless of age. Defaults to 1.
+
+Retention cleanup runs automatically after every successful `create` when `LCMC_VAULT_BACKUP_RETENTION_DAYS` is set. You can also trigger it manually:
+
+```bash
+lcmc-vault-backups cleanup
+```
 
 ## Restore Process
 

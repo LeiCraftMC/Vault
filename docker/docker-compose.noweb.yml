@@ -15,6 +15,9 @@ services:
       LCMC_VAULT_BACKUP_S3_BUCKET: "lcmc-vault-backups"
       LCMC_VAULT_BACKUP_S3_BASE_PATH: ""
 
+      LCMC_VAULT_BACKUP_RETENTION_DAYS: 30
+      LCMC_VAULT_BACKUP_RETENTION_MIN_COUNT: 3
+
       LCMC_VAULT_BACKUP_NTFY_URL: "https://ntfy.example.com/my-topic"
       LCMC_VAULT_BACKUP_NTFY_AUTH_TOKEN: "my-ntfy-auth-token"
 

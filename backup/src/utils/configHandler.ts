@@ -132,6 +132,9 @@ export class ConfigHandler {
 
         .add("LCMC_VAULT_BACKUP_AUTO_BACKUP", false, [true, false])
 
+        .add("LCMC_VAULT_BACKUP_RETENTION_DAYS", false)
+        .add("LCMC_VAULT_BACKUP_RETENTION_MIN_COUNT", false)
+
         .add("LCMC_VAULT_BACKUP_ENCRYPTION_PASSPHRASE", false);
 
 

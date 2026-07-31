@@ -9,6 +9,7 @@ import { BackupHelper } from "../apis/helper.js";
 import { Logger } from "../utils/logger.js";
 import { ConfigHandler } from "../utils/configHandler.js";
 import { NtfyService } from "../services/ntfy.js";
+import { RetentionService } from "../services/retention-service.js";
 
 const CMD_ARG_SPEC = CLICommandArg.defineCLIArgSpecs({
     flags: [
@@ -126,6 +127,20 @@ export class CreateBackupCMD extends CLIBaseCommand {
             await s3.uploadBackupStream(header.getArchiveName(), archivePath);
 
             Logger.log(`Backup successfully uploaded to S3`);
+
+            const retentionConfig = RetentionService.parseConfig({
+                retentionDays: config.LCMC_VAULT_BACKUP_RETENTION_DAYS,
+                minCount: config.LCMC_VAULT_BACKUP_RETENTION_MIN_COUNT
+            });
+
+            if (retentionConfig.retentionDays !== undefined) {
+                try {
+                    await RetentionService.applyRetention(s3, retentionConfig);
+                } catch (e: any) {
+                    Logger.warn(`Retention cleanup failed: ${Error.isError(e) ? e.message : String(e)}`);
+                    await ntfyService?.notifyWarning("Retention cleanup failed");
+                }
+            }
 
             await ntfyService?.notifySuccess(`Backup successfully created and uploaded to S3 at ${new Date(timeStamp).toLocaleString()}.`);
 

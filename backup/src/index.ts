@@ -4,6 +4,7 @@ import { CreateBackupCMD } from "./commands/createCMD";
 import { DownloadBackupCMD } from "./commands/downloadCMD";
 import { CronCMD } from "./commands/cronCMDs";
 import { VersionCMD } from "./commands/versionCMD";
+import { CleanupBackupCMD } from "./commands/cleanupCMD";
 import { ConfigHandler } from "./utils/configHandler";
 
 new CLIApp({
@@ -27,6 +28,7 @@ new CLIApp({
 })
     .register(new CreateBackupCMD())
     .register(new DownloadBackupCMD())
+    .register(new CleanupBackupCMD())
     .register(new CronCMD())
     .register(new VersionCMD())
 
