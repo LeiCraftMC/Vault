@@ -74,6 +74,7 @@ export class CreateBackupCMD extends CLIBaseCommand {
         if (Utils.existsSync(dbPath)) {
             Logger.log("Creating safe database snapshot...");
             try {
+                await BackupHelper.cleanupSnapshots(dataDir);
                 snapshotPath = await BackupHelper.createDatabaseSnapshot(dbPath, config.LCMC_VAULT_BACKUP_DATABASE_METHOD);
             } catch (e: any) {
                 await this.handleCriticalError(ntfyService, e.message);
@@ -142,7 +143,7 @@ export class CreateBackupCMD extends CLIBaseCommand {
                 }
             }
 
-            await BackupHelper.cleanupOldSnapshots(dataDir, retentionConfig.retentionDays);
+            await BackupHelper.cleanupSnapshots(dataDir);
 
             await ntfyService?.notifySuccess(`Backup successfully created and uploaded to S3 at ${new Date(timeStamp).toLocaleString()}.`);
 

@@ -63,17 +63,13 @@ export class BackupHelper {
         return snapshotPath;
     }
 
-    static async cleanupOldSnapshots(dataDir: string, maxAgeDays?: number) {
-        const now = Date.now();
-        const maxAgeMs = maxAgeDays ? maxAgeDays * 24 * 60 * 60 * 1000 : 0;
+    static async cleanupSnapshots(dataDir: string) {
 
         const backups = await this.findVaultwardenBackups(dataDir);
         for (const backup of backups) {
-            const stats = await Bun.file(backup).stat();
-            if (now - stats.mtime.getTime() > maxAgeMs) {
-                Logger.info(`Deleting old database snapshot: ${backup}`);
-                await Bun.file(backup).delete();
-            }
+
+            Logger.info(`Deleting old database snapshot: ${backup}`);
+            await Bun.file(backup).delete();
         }
     }
 
