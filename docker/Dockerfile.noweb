@@ -1,5 +1,4 @@
 FROM vaultwarden/server
 
-USER root
 RUN apk add --no-cache tar
-USER vaultwarden
+
