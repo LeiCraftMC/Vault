@@ -40,7 +40,7 @@ export class CreateBackupCMD extends CLIBaseCommand {
 
     override async run(args: CLICommandArgParser.ParsedArgs<typeof CMD_ARG_SPEC>, ctx: CLICommandContext): Promise<boolean> {
 
-        const config = ConfigHandler.getConfig()!;
+        const config = await ConfigHandler.forceReloadConfig(false);
 
         let ntfyService: NtfyService | null = null;
 

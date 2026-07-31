@@ -51,7 +51,7 @@ export class DownloadBackupCMD extends CLIBaseCommand {
 
     override async run(args: CLICommandArgParser.ParsedArgs<typeof CMD_ARG_SPEC>, ctx: CLICommandContext): Promise<boolean> {
 
-        const config = ConfigHandler.getConfig()!;
+        const config = await ConfigHandler.forceReloadConfig(false);
 
         const backupName = args.flags["backup-name"];
         const destination = args.flags["dest-dir"];

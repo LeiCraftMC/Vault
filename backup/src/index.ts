@@ -32,7 +32,7 @@ new CLIApp({
 
     .use(async (args, ctx, next) => {
 
-        const config = await ConfigHandler.loadConfig(args["config"])!;
+        const config = await ConfigHandler.loadConfig(args["config"], true)!;
 
         Logger.setLogLevel(config.LCMC_VAULT_BACKUP_LOG_LEVEL || args["log-level"]);
 

@@ -55,7 +55,7 @@ class ConfigSchema<T extends ConfigSchemaSettings = {}> {
         return this as any as ConfigSchema<T & { [K in KEY]: Setings }>;
     }
 
-    public parse() {
+    public parse(skipErrors: boolean = false) {
         const result: ConfigLike<T> = {} as ConfigLike<T>;
 
         for (const [key, settings] of Object.entries(this.schema)) {
@@ -63,7 +63,7 @@ class ConfigSchema<T extends ConfigSchemaSettings = {}> {
             const value = process.env[key];
 
             if (!value) {
-                if (settings.required) {
+                if (settings.required && !skipErrors) {
                     Logger.error(`The environment variable ${key} is required but not set.`);
                     process.exit(1);
                 }
@@ -82,7 +82,7 @@ class ConfigSchema<T extends ConfigSchemaSettings = {}> {
                     continue;
                 }
                 // Case-insensitive comparison for string enum values
-                if (!(settings.type as string[]).some(t => t.toLowerCase() === value.toLowerCase())) {
+                if (!(settings.type as string[]).some(t => t.toLowerCase() === value.toLowerCase()) && !skipErrors) {
                     Logger.error(`The environment variable ${key} has to be one of the following: ${settings.type.join(", ")}`);
                     process.exit(1);
                 }
@@ -158,7 +158,7 @@ export class ConfigHandler {
         }
     }
 
-    static async loadConfig(file?: string) {
+    static async loadConfig(file?: string, skipErrors: boolean = false) {
         if (this.config) return this.config;
 
         if (file) {
@@ -166,8 +166,13 @@ export class ConfigHandler {
         }
 
 
-        this.config = this.schema.parse();
+        this.config = this.schema.parse(skipErrors);
         return this.config;
+    }
+
+    static async forceReloadConfig(skipErrors: boolean = false) {
+        this.config = null;
+        return await this.loadConfig(undefined, skipErrors);
     }
 
 }
