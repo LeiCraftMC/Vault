@@ -49,6 +49,10 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: cd backup && bun install && cd ..
+
+      - name: Test & Typecheck
+        shell: bash
+        run: cd backup && bun run test && bun run typecheck && cd ..
       
       - name: Build Binary
         run: cd backup && bun compile linux-x64-baseline ${{ inputs.version }} --no-version-tag && cd ..
