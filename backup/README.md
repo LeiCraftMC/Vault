@@ -36,6 +36,7 @@ Edit your `.env` file to configure the following options:
 ```
 # S3 configurations
 LCMC_VAULT_BACKUP_S3_ENDPOINT=                                           # S3 Endpoint. Example: "https://s3.amazonaws.com"
+LCMC_VAULT_BACKUP_S3_REGION=us-east-1                                    # (Optional) S3 Region. Example: "us-east-1"
 LCMC_VAULT_BACKUP_S3_ACCESS_KEY_ID=                                      # S3 Access Key ID
 LCMC_VAULT_BACKUP_S3_SECRET_ACCESS_KEY=                                # S3 Secret Access Key
 LCMC_VAULT_BACKUP_S3_BUCKET=                                             # (Optional) S3 Bucket Name

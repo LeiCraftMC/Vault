@@ -13,6 +13,7 @@ export class S3Service {
      *
      * @param options - Configuration options for the S3Service.
      * @param options.endpoint - The endpoint URL of the S3-compatible storage service.
+     * @param options.region - (Optional) The region of the S3-compatible storage service.
      * @param options.accessKeyId - The access key ID for authentication with the storage service.
      * @param options.secretAccessKey - The secret access key for authentication with the storage service.
      * @param options.bucket - (Optional) The name of the bucket to use for storing backups.
@@ -20,6 +21,7 @@ export class S3Service {
      */
     constructor(options: {
         endpoint: string,
+        region?: string,
         accessKeyId: string,
         secretAccessKey: string,
         bucket?: string,
@@ -43,6 +45,7 @@ export class S3Service {
     static fromConfig(config: ParsedConfig) {
         return new S3Service({
             endpoint: config.LCMC_VAULT_BACKUP_S3_ENDPOINT,
+            region: config.LCMC_VAULT_BACKUP_S3_REGION,
             accessKeyId: config.LCMC_VAULT_BACKUP_S3_ACCESS_KEY_ID,
             secretAccessKey: config.LCMC_VAULT_BACKUP_S3_SECRET_ACCESS_KEY,
             bucket: config.LCMC_VAULT_BACKUP_S3_BUCKET,

@@ -116,6 +116,7 @@ export class ConfigHandler {
         .add("LCMC_VAULT_BACKUP_LOG_LEVEL", false, ["debug", "info", "warn", "error", "critical"])
 
         .add("LCMC_VAULT_BACKUP_S3_ENDPOINT", true)
+        .add("LCMC_VAULT_BACKUP_S3_REGION", false)
         .add("LCMC_VAULT_BACKUP_S3_ACCESS_KEY_ID", true)
         .add("LCMC_VAULT_BACKUP_S3_SECRET_ACCESS_KEY", true)
         .add("LCMC_VAULT_BACKUP_S3_BUCKET", false)
