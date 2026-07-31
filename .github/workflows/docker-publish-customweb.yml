@@ -1,4 +1,4 @@
-name: Publish Docker Images
+name: Publish Docker Images (With Custom Web)
 
 on:
   workflow_call:
@@ -12,11 +12,6 @@ on:
         required: false
         default: "false"
         type: string
-      skip_web_build:
-        description: 'Skip web image build?'
-        required: false
-        default: "false"
-        type: string
   workflow_dispatch:
     inputs:
       version:
@@ -25,11 +20,6 @@ on:
         type: string
       pre_release:
         description: 'Is this a pre-release?'
-        required: false
-        default: false
-        type: boolean
-      skip_web_build:
-        description: 'Skip web image build?'
         required: false
         default: false
         type: boolean
@@ -74,19 +64,17 @@ jobs:
 
       # Web Image
       - name: Prepare Web Image Build
-        if: inputs.skip_web_build != 'true'
         run: |
           chmod +x ./scripts/prepare-web-build.sh
           ./scripts/prepare-web-build.sh
         shell: bash
 
       - name: Build and push Web Image
-        if: inputs.skip_web_build != 'true'
         uses: ./.github/workflows/docker-build-and-push
         with:
           registry: ${{ env.REGISTRY }}
           image-name: ${{ env.IMAGE_NAME }}
-          image-tag-suffix: -web
+          image-tag-suffix: -onlyweb
           docker_context: ./tmp/web-build
           dockerfile: ./tmp/web-build/Dockerfile
           labels: ${{ steps.docker-setup.outputs.labels }}
@@ -94,11 +82,13 @@ jobs:
           pre_release: ${{ inputs.pre_release }}
 
 
-      - name: Build and push Vault Image
+      - name: Build and push LeiCraft_MC Vault Image
         uses: ./.github/workflows/docker-build-and-push
         with:
+          dockerfile: docker/Dockerfile.customweb
           registry: ${{ env.REGISTRY }}
           image-name: ${{ env.IMAGE_NAME }}
+          image-tag-suffix: -customweb
           labels: ${{ steps.docker-setup.outputs.labels }}
           version: ${{ inputs.version }}
           pre_release: ${{ inputs.pre_release }}
