@@ -1,5 +1,5 @@
 import { CLIBaseCommand, CLICommandArg, CLICommandArgParser, CLICommandContext } from "@cleverjs/cli";
-import { S3Service } from "../s3-service.js";
+import { S3Service } from "../services/s3-service.js";
 import { Utils } from "../utils";
 import { BackupArchiveHeader, RawBackupArchive } from "../archive.js";
 import { LinuxShellAPI } from "../apis/linux-shell.js";

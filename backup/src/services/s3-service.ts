@@ -1,7 +1,7 @@
 import { S3Client } from "bun";
-import { RawBackupArchive } from "./archive";
+import { RawBackupArchive } from "../archive";
 import { Uint } from "low-level";
-import type { ParsedConfig } from "./utils/configHandler";
+import type { ParsedConfig } from "../utils/configHandler";
 
 export class S3Service {
 

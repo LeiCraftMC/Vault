@@ -1,6 +1,6 @@
 import { CLIBaseCommand, CLICommandArg, CLICommandArgParser, CLICommandContext } from "@cleverjs/cli";
 import { Utils } from "../utils/index";
-import { S3Service } from "../s3-service";
+import { S3Service } from "../services/s3-service";
 import { RawBackupArchive } from "../archive";
 import { AES256 } from "../crypto";
 import { Logger } from "../utils/logger";

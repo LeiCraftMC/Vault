@@ -12,7 +12,7 @@ class CompilerCommand {
     public sourcemap = true;
     public minify = true;
     public bytecode = true;
-    public entrypoint = "./scripts/index.ts";
+    public entrypoint = "./scripts/entrypoint.ts";
     public outfile = "./build/bin/lcmc-vault-backups";
     public platform: PlatformArg = "auto";
     public env: NodeJS.ProcessEnv = {};

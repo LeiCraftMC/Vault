@@ -1,0 +1,40 @@
+{
+    "compilerOptions": {
+        /* Visit https://aka.ms/tsconfig to read more about this file */
+
+        // Environment setup & latest features
+        "lib": ["ESNext"],
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleDetection": "auto",
+        // "allowJs": true,
+        // "checkJs": true,
+
+        "types": ["node", "bun-types"],
+
+        // Module and Emit options
+        "moduleResolution": "bundler",
+        // "declaration": true,
+        "incremental": true,
+        "verbatimModuleSyntax": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        // "allowImportingTsExtensions": true,
+        // "noEmit": true,
+
+        // Type Checking
+        "strict": true,
+        "skipLibCheck": true,
+        "noFallthroughCasesInSwitch": true,
+        "noUncheckedIndexedAccess": true,
+
+        // Some stricter flags (disabled by default)
+        "noUnusedLocals": false,
+        "noUnusedParameters": false,
+        "noPropertyAccessFromIndexSignature": false,
+
+        // Additional features
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true
+    }
+}
