@@ -1,6 +1,6 @@
 services:
   leicraftmc-vault:
-    image: ghcr.io/leicraftmc/vault:latest
+    image: ghcr.io/leicraftmc/vault:latest-noweb
     container_name: leicraftmc-vault
     restart: unless-stopped
     network_mode: bridge

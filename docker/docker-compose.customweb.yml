@@ -1,0 +1,25 @@
+services:
+  leicraftmc-vault:
+    image: ghcr.io/leicraftmc/vault:latest-customweb
+    container_name: leicraftmc-vault
+    restart: unless-stopped
+    network_mode: bridge
+    environment:
+      DOMAIN: "https://vault.example.com"
+
+      LCMC_VAULT_BACKUP_S3_ENDPOINT: ""
+      LCMC_VAULT_BACKUP_S3_ACCESS_KEY_ID: ""
+      LCMC_VAULT_BACKUP_S3_SECRET_ACCESS_KEY: ""
+      LCMC_VAULT_BACKUP_S3_BUCKET: ""
+      LCMC_VAULT_BACKUP_S3_BASE_PATH: ""
+
+      LCMC_VAULT_BACKUP_DATA_DIR: "/data"
+      LCMC_VAULT_BACKUP_DATABASE_METHOD: "auto"
+      LCMC_VAULT_BACKUP_AUTO_BACKUP: true
+      LCMC_VAULT_BACKUP_SAVE_ENV: false
+
+      LCMC_VAULT_BACKUP_ENCRYPTION_PASSPHRASE: ""
+    volumes:
+      - /opt/leicraftmc/vault/data/:/data/
+    ports:
+      - 127.0.0.1:12322:80
