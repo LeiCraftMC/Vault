@@ -41,17 +41,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      #- name: Set up Bun
-      #  uses: oven-sh/setup-bun@v2
-      #  with:
-      #    bun-version: latest
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
 
-      #- name: Install dependencies
-      #  shell: bash
-      #  run: bun install
+      - name: Install dependencies
+        shell: bash
+        run: bun install
       
-      #- name: Build Binary
-      #  run: bun compile linux-x64-baseline ${{ inputs.version }} --no-version-tag
+      - name: Build Binary
+        run: bun compile linux-x64-baseline ${{ inputs.version }} --no-version-tag
       
       - name: Setup Docker
         id: docker-setup

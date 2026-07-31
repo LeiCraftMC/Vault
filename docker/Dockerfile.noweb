@@ -9,3 +9,5 @@ RUN chmod u+x /usr/local/bin/lcmc-vault-backups
 ENV LCMC_VAULT_BACKUP_DATA_DIR=/data
 ENV LCMC_VAULT_BACKUP_DATABASE_METHOD=vaultwarden
 ENV LCMC_VAULT_BACKUP_SAVE_ENV=true
+
+RUN /usr/local/bin/lcmc-vault-backups cron setup --cron-time="0 3 * * *"
