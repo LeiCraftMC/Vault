@@ -19,7 +19,8 @@ const CMD_ARG_SPEC = CLICommandArg.defineCLIArgSpecs({
             name: "dest-dir",
             type: "string",
             description: "The destination directory where the backup will be extracted.",
-            required: true,
+            default: "/data/backups",
+            required: false,
             checkFN: (value: string) => {
                 if (!Utils.isDirWritable(value)) {
                     return `The destination directory '${value}' does not exist or is not writable.`;
