@@ -10,16 +10,10 @@ import { mkdir, open } from "fs/promises";
 const CMD_ARG_SPEC = CLICommandArg.defineCLIArgSpecs({
     flags: [
         {
-            name: "backup-name",
+            name: "backup-file",
             type: "string",
             description: "The name of the backup to download.",
-            required: true,
-            checkFN: (value: string) => {
-                if (value.match(/[^a-zA-Z0-9-_]/)) {
-                    return "Backup name can only contain alphanumeric characters, dashes and underscores.";
-                }
-                return true;
-            }
+            required: true
         },
         {
             name: "dest-dir",
@@ -53,9 +47,9 @@ export class DownloadBackupCMD extends CLIBaseCommand {
 
         const config = await ConfigHandler.forceReloadConfig(false);
 
-        const backupName = args.flags["backup-name"];
+        const backupFile = args.flags["backup-file"];
         const destination = args.flags["dest-dir"];
-        const fullDestination = `${destination}/${backupName}`;
+        const fullDestination = `${destination}/${backupFile}`;
 
         if (Utils.existsSync(fullDestination)) {
             Logger.error(`The destination directory '${fullDestination}' already exists.`);
@@ -63,7 +57,7 @@ export class DownloadBackupCMD extends CLIBaseCommand {
         }
 
         const s3 = S3Service.fromConfig(config);
-        Logger.log(`Downloading backup '${backupName}' from S3...`);
+        Logger.log(`Downloading backup '${backupFile}' from S3...`);
 
         const workDir = `/tmp/lcmc-vault-restore-${Date.now()}`;
         const archivePath = `${workDir}/archive.lcmc`;
@@ -72,8 +66,8 @@ export class DownloadBackupCMD extends CLIBaseCommand {
 
         try {
             await mkdir(workDir, { recursive: true });
-            await s3.downloadBackupToFile(backupName, archivePath);
-            Logger.log(`Downloaded backup '${backupName}' from S3.`);
+            await s3.downloadBackupToFile(backupFile, archivePath);
+            Logger.log(`Downloaded backup '${backupFile}' from S3.`);
 
             Logger.log("Reading backup archive envelope...");
             const archiveInfo = await RawBackupArchive.decodeFromFile(archivePath);
@@ -109,7 +103,7 @@ export class DownloadBackupCMD extends CLIBaseCommand {
                 process.exit(1);
             }
 
-            Logger.log(`Backup '${backupName}' downloaded and extracted successfully to '${fullDestination}'.`);
+            Logger.log(`Backup '${backupFile}' downloaded and extracted successfully to '${fullDestination}'.`);
             Logger.warn("Before starting Vaultwarden with restored data, stop it and delete any existing db.sqlite3-wal file next to db.sqlite3 to avoid corruption.");
 
             return true;

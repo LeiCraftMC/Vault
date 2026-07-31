@@ -138,3 +138,5 @@ dist
 build/
 
 local/
+
+tmp-data-*

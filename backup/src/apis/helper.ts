@@ -63,6 +63,20 @@ export class BackupHelper {
         return snapshotPath;
     }
 
+    static async cleanupOldSnapshots(dataDir: string, maxAgeDays?: number) {
+        const now = Date.now();
+        const maxAgeMs = maxAgeDays ? maxAgeDays * 24 * 60 * 60 * 1000 : 0;
+
+        const backups = await this.findVaultwardenBackups(dataDir);
+        for (const backup of backups) {
+            const stats = await Bun.file(backup).stat();
+            if (now - stats.mtime.getTime() > maxAgeMs) {
+                Logger.info(`Deleting old database snapshot: ${backup}`);
+                await Bun.file(backup).delete();
+            }
+        }
+    }
+
     private static async findVaultwardenBackups(dataDir: string): Promise<string[]> {
         const pattern = /^db_\d{8}_\d{6}\.sqlite3$/;
         const backups: string[] = [];
@@ -100,7 +114,9 @@ export class BackupHelper {
                 "db.sqlite3",
                 "db.sqlite3-wal",
                 "db.sqlite3-shm",
-                "icon_cache"
+                "icon_cache",
+                "tmp",
+                "backups"
             ]);
 
             // Replace db.sqlite3 with the clean snapshot.

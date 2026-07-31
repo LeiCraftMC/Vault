@@ -76,8 +76,12 @@ export class S3Service {
      */
     async downloadBackupToFile(name: string, outputPath: string) {
         const s3File = this.client.file(this.basePath + name);
+        const writer = Bun.file(outputPath).writer();
         const stream = s3File.stream();
-        await Bun.write(outputPath, new Response(stream));
+        for await (const chunk of stream) {
+            writer.write(chunk);
+        }
+        await writer.end();
     }
 
     /**

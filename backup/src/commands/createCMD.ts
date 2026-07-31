@@ -142,6 +142,8 @@ export class CreateBackupCMD extends CLIBaseCommand {
                 }
             }
 
+            await BackupHelper.cleanupOldSnapshots(dataDir, retentionConfig.retentionDays);
+
             await ntfyService?.notifySuccess(`Backup successfully created and uploaded to S3 at ${new Date(timeStamp).toLocaleString()}.`);
 
             return true;
