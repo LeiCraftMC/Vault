@@ -100,6 +100,7 @@ export class BackupHelper {
                 "db.sqlite3",
                 "db.sqlite3-wal",
                 "db.sqlite3-shm",
+                "icon_cache"
             ]);
 
             // Replace db.sqlite3 with the clean snapshot.

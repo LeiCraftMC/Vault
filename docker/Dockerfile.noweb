@@ -1,4 +1,11 @@
 FROM vaultwarden/server
 
-RUN apk add --no-cache tar
+RUN apt-get update && apt-get install -y tar && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+COPY --chown=root:root ./backup/build/bin/lcmc-vault-backups-linux-x64-baseline /usr/local/bin/lcmc-vault-backups
+
+RUN chmod u+x /usr/local/bin/lcmc-vault-backups
+
+ENV LCMC_VAULT_BACKUP_DATA_DIR=/data
+ENV LCMC_VAULT_BACKUP_DATABASE_METHOD=vaultwarden
+ENV LCMC_VAULT_BACKUP_SAVE_ENV=true
