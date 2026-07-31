@@ -108,7 +108,7 @@ export class DownloadBackupCMD extends CLIBaseCommand {
 
             return true;
         } catch (e: any) {
-            Logger.error(`Error downloading the backup: ${e.stack}`);
+            Logger.error(`Error downloading the backup: ${Error.isError(e) ? e.stack ? e.stack : e.message : String(e)}`);
             return false;
         } finally {
             await Bun.$`rm -rf ${workDir}`.quiet().catch(() => {});
