@@ -1,6 +1,6 @@
-import { ConfigHandler } from "./configHandler.js";
-import { Logger } from "./logger.js";
-import { existsSync as fs_existsSync, statSync as fs_statSync } from "fs";
+import { ConfigHandler } from "./configHandler";
+import { Logger } from "./logger";
+import { existsSync as fs_existsSync, statSync as fs_statSync, rmSync as fs_rmSync } from "fs";
 
 export class Utils {
 
@@ -29,6 +29,16 @@ export class Utils {
         } catch (err) {
             Logger.error(`Error checking if path '${path}' exists: ${err}`);
             return false;
+        }
+    }
+
+    static rmSync(path: string, recursive: boolean = false, force: boolean = false) {
+        try {
+            if (fs_existsSync(path)) {
+                fs_rmSync(path, { recursive, force });
+            }
+        } catch (err) {
+            Logger.error(`Error removing path '${path}': ${err}`);
         }
     }
     

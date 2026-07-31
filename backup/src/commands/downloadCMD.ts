@@ -1,9 +1,11 @@
 import { CLIBaseCommand, CLICommandArg, CLICommandArgParser, CLICommandContext } from "@cleverjs/cli";
-import { Utils } from "../utils";
+import { Utils } from "../utils/index";
 import { S3Service } from "../s3-service";
-import { BackupArchive } from "../archive";
-import { Logger } from "../logger.js";
-import { ConfigHandler } from "../configHandler.js";
+import { RawBackupArchive } from "../archive";
+import { AES256 } from "../crypto";
+import { Logger } from "../utils/logger";
+import { ConfigHandler } from "../utils/configHandler";
+import { mkdir, open } from "fs/promises";
 
 const CMD_ARG_SPEC = CLICommandArg.defineCLIArgSpecs({
     flags: [
@@ -63,37 +65,44 @@ export class DownloadBackupCMD extends CLIBaseCommand {
         const s3 = S3Service.fromConfig(config);
         Logger.log(`Downloading backup '${backupName}' from S3...`);
 
-        try {
-            const rawBackup = await s3.downloadBackup(backupName);
-            if (!rawBackup) {
-                Logger.error(`A backup with the name '${backupName}' does not exist.`);
-                process.exit(1);
-            }
+        const workDir = `/tmp/lcmc-vault-restore-${Date.now()}`;
+        const archivePath = `${workDir}/archive.lcmc`;
+        const contentPath = `${workDir}/content.bin`;
+        const tarballPath = `${workDir}/backup.tar.gz`;
 
+        try {
+            await mkdir(workDir, { recursive: true });
+            await s3.downloadBackupToFile(backupName, archivePath);
             Logger.log(`Downloaded backup '${backupName}' from S3.`);
 
-            if (rawBackup.encrypted && !config.LCMC_VAULT_BACKUP_ENCRYPTION_PASSPHRASE) {
+            Logger.log("Reading backup archive envelope...");
+            const archiveInfo = await RawBackupArchive.decodeFromFile(archivePath);
+
+            if (archiveInfo.encrypted && !config.LCMC_VAULT_BACKUP_ENCRYPTION_PASSPHRASE) {
                 Logger.error("The backup is encrypted. You need to provide the passphrase to decrypt it.");
                 process.exit(1);
             }
 
-            Logger.log("Decrypting the backup...");
+            // Split the content bytes out of the raw archive file.
+            await this.splitFileSection(archivePath, archiveInfo.contentOffset, archiveInfo.contentLength, contentPath);
 
-            const backup = BackupArchive.fromRaw(rawBackup, config.LCMC_VAULT_BACKUP_ENCRYPTION_PASSPHRASE);
-            if (!backup) {
-                Logger.error("The backup is corrupted or not a valid backup file.");
-                if (rawBackup.encrypted) {
+            Logger.log("Decrypting the backup...");
+            let finalTarballPath: string;
+            if (archiveInfo.encrypted) {
+                const decrypted = await AES256.decryptFile(contentPath, tarballPath, config.LCMC_VAULT_BACKUP_ENCRYPTION_PASSPHRASE!);
+                if (!decrypted) {
+                    Logger.error("The backup is corrupted or not a valid backup file.");
                     Logger.error("Could not decrypt the backup. Make sure you are using the correct passphrase.");
+                    process.exit(1);
                 }
-                process.exit(1);
+                finalTarballPath = tarballPath;
+            } else {
+                finalTarballPath = contentPath;
             }
 
             Logger.log("Extracting the backup...");
-
-            const tarballPath = `${fullDestination}/backup.tar.gz`;
-            await Bun.write(tarballPath, backup.getTarball().getRaw(), { createPath: true });
-
-            const tarResult = Bun.$`tar -xzf ${tarballPath} -C ${fullDestination}`.quiet();
+            await mkdir(fullDestination, { recursive: true });
+            const tarResult = Bun.$`tar -xzf ${finalTarballPath} -C ${fullDestination}`.quiet();
             const result = await tarResult;
             if (result.exitCode !== 0) {
                 Logger.error(`Failed to extract backup: ${result.stderr.toString()}`);
@@ -104,11 +113,37 @@ export class DownloadBackupCMD extends CLIBaseCommand {
             Logger.warn("Before starting Vaultwarden with restored data, stop it and delete any existing db.sqlite3-wal file next to db.sqlite3 to avoid corruption.");
 
             return true;
-
         } catch (e: any) {
             Logger.error(`Error downloading the backup: ${e.stack}`);
             return false;
+        } finally {
+            await Bun.$`rm -rf ${workDir}`.quiet().catch(() => {});
         }
     }
 
+    private async splitFileSection(inputPath: string, offset: number, length: number, outputPath: string) {
+        const input = await open(inputPath, "r");
+        try {
+            const output = Bun.file(outputPath).writer();
+            const bufferSize = 64 * 1024;
+            const buffer = new Uint8Array(bufferSize);
+            let remaining = length;
+            let position = offset;
+
+            while (remaining > 0) {
+                const toRead = Math.min(bufferSize, remaining);
+                const readResult = await input.read(buffer, 0, toRead, position);
+                if (readResult.bytesRead === 0) {
+                    throw new Error("Unexpected end of archive file while splitting content section");
+                }
+                await output.write(buffer.subarray(0, readResult.bytesRead));
+                position += readResult.bytesRead;
+                remaining -= readResult.bytesRead;
+            }
+
+            await output.end();
+        } finally {
+            await input.close();
+        }
+    }
 }

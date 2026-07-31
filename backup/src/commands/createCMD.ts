@@ -1,12 +1,14 @@
 import { CLIBaseCommand, CLICommandArg, CLICommandArgParser, CLICommandContext } from "@cleverjs/cli";
 import { S3Service } from "../s3-service.js";
-import { Utils } from "../utils.js";
-import { BackupArchive, type RawBackupArchive } from "../archive.js";
+import { Utils } from "../utils";
+import { BackupArchiveHeader, RawBackupArchive } from "../archive.js";
 import { LinuxShellAPI } from "../apis/linux-shell.js";
-import { Uint, Uint64 } from "low-level";
+import { AES256 } from "../crypto.js";
+import { Uint64 } from "low-level";
 import { BackupHelper } from "../apis/helper.js";
-import { Logger } from "../logger.js";
-import { ConfigHandler } from "../configHandler.js";
+import { Logger } from "../utils/logger.js";
+import { ConfigHandler } from "../utils/configHandler.js";
+import { NtfyService } from "../services/ntfy.js";
 
 const CMD_ARG_SPEC = CLICommandArg.defineCLIArgSpecs({
     flags: [
@@ -28,12 +30,30 @@ export class CreateBackupCMD extends CLIBaseCommand {
         });
     }
 
+    private async handleCriticalError(ntfyService: NtfyService | null, error: string): Promise<never> {
+        Logger.critical("Critical error:", error);
+        if (ntfyService) {
+            await ntfyService.notifyError("Critical error occurred", Logger.getLogHistory());
+        }
+        process.exit(1);
+    }
+
     override async run(args: CLICommandArgParser.ParsedArgs<typeof CMD_ARG_SPEC>, ctx: CLICommandContext): Promise<boolean> {
 
         const config = ConfigHandler.getConfig()!;
 
+        let ntfyService: NtfyService | null = null;
+
+        if (config.LCMC_VAULT_BACKUP_NTFY_URL) {
+            ntfyService = new NtfyService(
+                config.LCMC_VAULT_BACKUP_NTFY_URL,
+                config.LCMC_VAULT_BACKUP_NTFY_AUTH_TOKEN
+            );
+        }
+
         if (args.flags["as-cron"] && !config.LCMC_VAULT_BACKUP_AUTO_BACKUP) {
             Logger.error("Automatic backup is not enabled.");
+            await ntfyService?.notifyWarning("Automatic backup is not enabled.");
             process.exit(1);
         }
 
@@ -43,8 +63,7 @@ export class CreateBackupCMD extends CLIBaseCommand {
         Logger.log(`Creating new backup of the Vaultwarden data at ${new Date(timeStamp).toLocaleString()}`);
 
         if (!Utils.existsSync(dataDir)) {
-            Logger.error(`Vaultwarden data directory '${dataDir}' does not exist.`);
-            process.exit(1);
+            await this.handleCriticalError(ntfyService, `Vaultwarden data directory '${dataDir}' does not exist.`);
         }
 
         const dbPath = `${dataDir}/db.sqlite3`;
@@ -53,7 +72,11 @@ export class CreateBackupCMD extends CLIBaseCommand {
         let snapshotPath: string | null = null;
         if (Utils.existsSync(dbPath)) {
             Logger.log("Creating safe database snapshot...");
-            snapshotPath = await BackupHelper.createDatabaseSnapshot(dbPath, config.LCMC_VAULT_BACKUP_DATABASE_METHOD);
+            try {
+                snapshotPath = await BackupHelper.createDatabaseSnapshot(dbPath, config.LCMC_VAULT_BACKUP_DATABASE_METHOD);
+            } catch (e: any) {
+                await this.handleCriticalError(ntfyService, e.message);
+            }
             if (snapshotPath) {
                 Logger.log("Database snapshot created.");
             }
@@ -70,24 +93,49 @@ export class CreateBackupCMD extends CLIBaseCommand {
         Logger.log("Creating tar.gz backup archive...");
         const tarballBytes = await BackupHelper.createTarball(dataDir, snapshotPath, envContent);
 
-        const archive = BackupArchive.fromTarball(Uint64.from(timeStamp), Uint.from(tarballBytes));
+        const workDir = `/tmp/lcmc-vault-backup-${Date.now()}`;
+        const tarballPath = `${workDir}/backup.tar.gz`;
+        const encryptedPath = `${workDir}/backup.tar.gz.enc`;
+        const archivePath = `${workDir}/archive.lcmc`;
 
-        let rawArchive: RawBackupArchive;
-        if (config.LCMC_VAULT_BACKUP_ENCRYPTION_PASSPHRASE) {
-            rawArchive = archive.encrypt(config.LCMC_VAULT_BACKUP_ENCRYPTION_PASSPHRASE);
-            Logger.log("Encrypted archive created.");
-        } else {
-            rawArchive = archive.toRaw();
-            Logger.log("Unencrypted archive created.");
+        try {
+            await Bun.write(tarballPath, tarballBytes, { createPath: true });
+
+            const header = new BackupArchiveHeader(Uint64.from(timeStamp));
+            const passphrase = config.LCMC_VAULT_BACKUP_ENCRYPTION_PASSPHRASE;
+
+            let contentPath: string;
+            let encrypted: boolean;
+            if (passphrase) {
+                Logger.log("Encrypting backup archive...");
+                await AES256.encryptFile(tarballPath, encryptedPath, passphrase);
+                contentPath = encryptedPath;
+                encrypted = true;
+                Logger.log("Encrypted archive created.");
+            } else {
+                contentPath = tarballPath;
+                encrypted = false;
+                Logger.log("Unencrypted archive created.");
+            }
+
+            Logger.log("Assembling backup archive envelope...");
+            await RawBackupArchive.encodeToFile(archivePath, header, encrypted, contentPath);
+
+            Logger.log("Uploading backup to S3...");
+            const s3 = S3Service.fromConfig(config);
+            await s3.uploadBackupStream(header.getArchiveName(), archivePath);
+
+            Logger.log(`Backup successfully uploaded to S3`);
+
+            await ntfyService?.notifySuccess(`Backup successfully created and uploaded to S3 at ${new Date(timeStamp).toLocaleString()}.`);
+
+            return true;
+        } catch (err: any) {
+            await this.handleCriticalError(ntfyService, `Failed to create and upload backup: ${Error.isError(err) ? err.message : String(err)}`);
+        } finally {
+            Utils.rmSync(workDir, true, true);
         }
 
-        Logger.log("Uploading backup to S3...");
-
-        const s3 = S3Service.fromConfig(config);
-        await s3.uploadBackup(rawArchive);
-
-        Logger.log(`Backup successfully uploaded to S3`);
-
-        return true;
+        return false;
     }
 }

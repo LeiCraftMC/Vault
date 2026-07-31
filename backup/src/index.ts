@@ -1,10 +1,10 @@
-import { Logger } from "./logger";
+import { Logger } from "./utils/logger";
 import { CLIApp, CLICommandArg, CLICommandArgParser, CLICommandContext, type CLICMDExecEnv } from "@cleverjs/cli";
 import { CreateBackupCMD } from "./commands/createCMD";
 import { DownloadBackupCMD } from "./commands/downloadCMD";
 import { CronCMD } from "./commands/cronCMDs";
 import { VersionCMD } from "./commands/versionCMD";
-import { ConfigHandler } from "./configHandler";
+import { ConfigHandler } from "./utils/configHandler";
 
 new CLIApp({
     globalFlags: CLICommandArg.defineCLIFlagSpecs([

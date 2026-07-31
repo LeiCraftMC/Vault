@@ -1,7 +1,7 @@
 import { S3Client } from "bun";
 import { RawBackupArchive } from "./archive";
 import { Uint } from "low-level";
-import type { ParsedConfig } from "./configHandler";
+import type { ParsedConfig } from "./utils/configHandler";
 
 export class S3Service {
 
@@ -55,8 +55,25 @@ export class S3Service {
         return await file.write(rawBackup.encodeToHex().getRaw());
     }
 
+    /**
+     * Streams a local file to S3 without loading it into memory.
+     */
+    async uploadBackupStream(name: string, inputPath: string) {
+        const file = this.client.file(this.basePath + name);
+        return await file.write(Bun.file(inputPath));
+    }
+
     async downloadBackup(name: string) {
         const file = await this.client.file(this.basePath + name).bytes();
         return RawBackupArchive.fromDecodedHex(Uint.from(file));
+    }
+
+    /**
+     * Streams a backup from S3 into a local file without loading it into memory.
+     */
+    async downloadBackupToFile(name: string, outputPath: string) {
+        const s3File = this.client.file(this.basePath + name);
+        const stream = s3File.stream();
+        await Bun.write(outputPath, new Response(stream));
     }
 }

@@ -11,6 +11,8 @@ export class Logger {
 
     private static logLevel: typeof this.logLevelMap[Logger.LogLevel] = this.logLevelMap.info;
     
+    private static readonly logHistory: string[] = [];
+
     static setLogLevel(level: Logger.LogLevel) {
         if (this.logLevelMap[level] === undefined) {
             throw new Error(`Invalid log level: ${level}`);
@@ -23,39 +25,75 @@ export class Logger {
         return (match ? match[0] : "info") as Logger.LogLevel;
     }
 
+    static getLogHistory(): string[] {
+        return this.logHistory;
+    }
+
+
     static debug(...args: any[]) {
+
         if (this.logLevel <= this.logLevelMap.debug) {
-            console.debug(`[${new Date(Date.now()).toISOString()}]`, "[DEBUG]", ...args);
+
+            const date = new Date(Date.now()).toISOString();
+            
+            console.debug(`[${date}]`, "[DEBUG]", ...args);
+            this.logHistory.push(`[${date}] [DEBUG] ${args.join(" ")}`);
+
         }
     }
 
     static log(...args: any[]) {
+
         if (this.logLevel <= this.logLevelMap.info) {
-            console.log(`[${new Date(Date.now()).toISOString()}]`, "[INFO]", ...args);
+
+            const date = new Date(Date.now()).toISOString();
+
+            console.log(`[${date}]`, "[INFO]", ...args);
+            this.logHistory.push(`[${date}] [INFO] ${args.join(" ")}`);
         }
     }
 
     static info(...args: any[]) {
+
         if (this.logLevel <= this.logLevelMap.info) {
-            console.info(`[${new Date(Date.now()).toISOString()}]`, "[INFO]", ...args);
+
+            const date = new Date(Date.now()).toISOString();
+
+            console.info(`[${date}]`, "[INFO]", ...args);
+            this.logHistory.push(`[${date}] [INFO] ${args.join(" ")}`);
         }
     }
 
     static warn(...args: any[]) {
+
         if (this.logLevel <= this.logLevelMap.warn) {
-            console.warn(`[${new Date(Date.now()).toISOString()}]`, "[WARN]", ...args);
+
+            const date = new Date(Date.now()).toISOString();
+
+            console.warn(`[${date}]`, "[WARN]", ...args);
+            this.logHistory.push(`[${date}] [WARN] ${args.join(" ")}`);
         }
     }
 
     static error(...args: any[]) {
+
         if (this.logLevel <= this.logLevelMap.error) {
-            console.error(`[${new Date(Date.now()).toISOString()}]`, "[ERROR]", ...args);
+
+            const date = new Date(Date.now()).toISOString();
+
+            console.error(`[${date}]`, "[ERROR]", ...args);
+            this.logHistory.push(`[${date}] [ERROR] ${args.join(" ")}`);
         }
     }
 
     static critical(...args: any[]) {
+        
         if (this.logLevel <= this.logLevelMap.critical) {
-            console.error(`[${new Date(Date.now()).toISOString()}]`, "[CRITICAL]", ...args);
+
+            const date = new Date(Date.now()).toISOString();
+
+            console.error(`[${date}]`, "[CRITICAL]", ...args);
+            this.logHistory.push(`[${date}] [CRITICAL] ${args.join(" ")}`);
         }
     }
 

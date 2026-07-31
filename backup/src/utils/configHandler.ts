@@ -121,6 +121,9 @@ export class ConfigHandler {
         .add("LCMC_VAULT_BACKUP_S3_BUCKET", false)
         .add("LCMC_VAULT_BACKUP_S3_BASE_PATH", false)
 
+        .add("LCMC_VAULT_BACKUP_NTFY_URL", false)
+        .add("LCMC_VAULT_BACKUP_NTFY_AUTH_TOKEN", false)
+
         .add("LCMC_VAULT_BACKUP_DATA_DIR", false)
 
         .add("LCMC_VAULT_BACKUP_DATABASE_METHOD", false, ["auto", "vaultwarden", "sqlite3", "none"])

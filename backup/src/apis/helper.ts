@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "fs";
 import { readdir } from "fs/promises";
-import { Logger } from "../logger";
+import { Logger } from "../utils/logger";
 import { LinuxShellAPI } from "./linux-shell";
 import { join, dirname } from "path";
 

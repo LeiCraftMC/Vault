@@ -1,5 +1,5 @@
 import { CLIBaseCommand } from "@cleverjs/cli";
-import { Logger } from "../logger";
+import { Logger } from "../utils/logger";
 
 export class VersionCMD extends CLIBaseCommand {
     
