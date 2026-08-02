@@ -3,6 +3,7 @@ FROM vaultwarden/server
 RUN apt-get update && apt-get install -y tar cron supervisor && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY --chown=root:root ./backup/build/bin/lcmc-vault-backups-linux-x64-baseline /usr/local/bin/lcmc-vault-backups
+COPY --chown=root:root ./docker/conf/services.ini /etc/supervisor.d/services.ini
 
 RUN chmod u+x /usr/local/bin/lcmc-vault-backups
 
