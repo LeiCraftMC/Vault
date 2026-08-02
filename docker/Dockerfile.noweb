@@ -13,4 +13,4 @@ ENV LCMC_VAULT_BACKUP_SAVE_ENV=true
 
 RUN /usr/local/bin/lcmc-vault-backups cron setup --cron-time="0 3 * * *"
 
-CMD ["/usr/bin/supervisord", "-c" "/etc/supervisor.d/services.ini"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor.d/services.ini"]
