@@ -1,6 +1,6 @@
 FROM vaultwarden/server
 
-RUN apt-get update && apt-get install -y tar && apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y tar cron supervisor && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY --chown=root:root ./backup/build/bin/lcmc-vault-backups-linux-x64-baseline /usr/local/bin/lcmc-vault-backups
 
@@ -11,3 +11,5 @@ ENV LCMC_VAULT_BACKUP_DATABASE_METHOD=vaultwarden
 ENV LCMC_VAULT_BACKUP_SAVE_ENV=true
 
 RUN /usr/local/bin/lcmc-vault-backups cron setup --cron-time="0 3 * * *"
+
+CMD ["supervisord", "-c" "/etc/supervisor.d/services.ini"]
